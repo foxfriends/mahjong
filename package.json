@@ -1,0 +1,23 @@
+{
+  "name": "mahjong",
+  "version": "1.0.0",
+  "description": "Play Mahjong online with your friends",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/foxfriends/mahjong.git"
+  },
+  "keywords": [
+    "game",
+    "mahjong"
+  ],
+  "author": "Cameron Eldridge",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/foxfriends/mahjong/issues"
+  },
+  "homepage": "https://github.com/foxfriends/mahjong#readme"
+}
