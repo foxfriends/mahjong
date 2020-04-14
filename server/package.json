@@ -1,0 +1,31 @@
+{
+  "name": "mahjong",
+  "version": "1.0.0",
+  "description": "Play Mahjong online with your friends",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node -r dotenv/config index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/foxfriends/mahjong.git"
+  },
+  "keywords": [
+    "game",
+    "mahjong"
+  ],
+  "author": "Cameron Eldridge",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/foxfriends/mahjong/issues"
+  },
+  "homepage": "https://github.com/foxfriends/mahjong#readme",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "koa": "^2.11.0",
+    "koa-static": "^5.0.0",
+    "socket.io": "^2.3.0"
+  }
+}
