@@ -6,7 +6,7 @@ Please note this is the real Mahjong game, not the weird tile matching one. We d
 
 ## Usage
 
-```
+```bash
 # Compile the client
 cd client
 npm install
