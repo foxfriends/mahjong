@@ -5,18 +5,18 @@ export class Disconnect extends Error {}
 
 export default class AsyncSocket {
     constructor(socket) {
-        this.socket = socket;
+        this.raw = socket;
         this.channel = new Channel();
 
-        this.socket.on('message', ({ subject, body }, response) => {
+        this.raw.on('message', ({ subject, body }, response) => {
             this.channel.send(new Message(subject, body, response));
         });
 
-        this.socket.on('disconnect', error => {
+        this.raw.on('disconnect', error => {
             this.channel.throw(new Disconnect());
         });
 
-        this.socket.on('error', error => {
+        this.raw.on('error', error => {
             this.channel.throw(error);
         });
     }
@@ -35,7 +35,7 @@ export default class AsyncSocket {
 
     async send(subject, body) {
         return new Promise((resolve, reject) => {
-            this.socket.send({ subject, body }, ({ error, body }) => {
+            this.raw.send({ subject, body }, ({ error, body }) => {
                 if (!error) {
                     resolve(body);
                 } else {

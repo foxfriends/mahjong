@@ -1,14 +1,27 @@
 import AsyncSocket, { Disconnect } from '../socket/socket.js';
+import Schema from '../lib/schema.js';
+import Fs from 'fs';
 
 const sockets = new Map();
 
-export default stateDirectory => async rawSocket => {
-    const socket = new AsyncSocket(rawSocket);
-    let name, room;
-    try {
+export default stateDirectory => {
+    async function loadSchema(name) {
+        const path = `${stateDirectory}/${name}`;
+        try {
+            await Fs.promises.access(path);
+        } catch (e) {
+            return new Schema({ name });
+        }
+
+        await Fs.promises.access(path, Fs.constants.R_OK);
+        const schema = JSON.parse(await Fs.promises.readFile(path));
+        return new Schema(schema);
+    }
+
+    async function identification(socket) {
         for (;;) {
             const identification = await socket.expect('identification');
-            name = identification.body.name;
+            const name = identification.body.name;
             if (!name) {
                 identification.fail('Required parameter `name` is missing.');
                 continue;
@@ -17,35 +30,64 @@ export default stateDirectory => async rawSocket => {
                 identification.fail(`The name ${name} is already in use.`);
                 continue;
             }
-            sockets.set(name, rawSocket);
+            sockets.set(name, socket.raw);
             identification.success();
-            break;
-        }
-
-        for (;;) {
-            const location = await socket.expect('location');
-            room = location.body.room;
-            if (!room) {
-                identification.fail('Required parameter `room` is missing.');
-                continue;
-            }
-            location.success();
-            rawSocket.join(room);
-            break;
-        }
-        console.log(`${name} has joined ${room}`);
-        for (;;) {
-            let msg = await socket.recv();
-        }
-    } catch (error) {
-        if (error instanceof Disconnect) {
-            if (name) {
-                console.log(`${name} has left`);
-            }
-        }
-    } finally {
-        if (name) {
-            sockets.delete(name);
+            return name;
         }
     }
-};
+
+    async function location(socket, name) {
+        for (;;) {
+            const location = await socket.expect('location');
+            const room = location.body.room;
+            if (!room) {
+                location.fail('Required parameter `room` is missing.');
+                continue;
+            }
+
+            let schema;
+            try {
+                schema = await loadSchema(room);
+            } catch (error) {
+                location.fail(error);
+                continue;
+            }
+
+            if (!schema.hasPlayer(name)) {
+                if (!schema.hasSpace()) {
+                    location.fail(`The room ${room} is already full.`);
+                    continue;
+                }
+                schema.addPlayer(name);
+            }
+
+            socket.raw.join(room);
+            location.success();
+            return { room, schema };
+        }
+    }
+
+    return async rawSocket => {
+        const socket = new AsyncSocket(rawSocket);
+        let name;
+        try {
+            name = await identification(socket);
+            const { room, schema } = await location(socket, name);
+
+            console.log(`${name} has joined ${room}`);
+            for (;;) {
+                let msg = await socket.recv();
+            }
+        } catch (error) {
+            if (error instanceof Disconnect) {
+                if (name) {
+                    console.log(`${name} has left`);
+                }
+            }
+        } finally {
+            if (name) {
+                sockets.delete(name);
+            }
+        }
+    };
+}

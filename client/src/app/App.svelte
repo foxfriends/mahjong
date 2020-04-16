@@ -5,7 +5,7 @@
   export let socket;
   let name, room;
 
-  let request, errorMessage;
+  let errorMessage;
 
   const PLAY = Symbol();
 
@@ -17,10 +17,11 @@
       await socket.send('location', { room });
       state = PLAY;
     } catch (error) {
+      console.log(error);
       errorMessage = error;
     }
   }
-  
+
   async function identification() {
     if (!name) { return; }
     errorMessage = undefined;
@@ -36,7 +37,9 @@
   let state = identification;
 
   function submit(event) {
-    if (event.key == 'Enter') { request = state(); }
+    if (event.key == 'Enter') {
+      state();
+    }
   }
 </script>
 
@@ -51,12 +54,12 @@
       <div class="form">
         {#if state === identification}
           <input class="input" placeholder="Enter your name" bind:value={name} on:keydown={submit} autofocus />
-          <button class="button" disabled={!name} on:click={() => request = state()}>Confirm</button>
+          <button class="button" disabled={!name} on:click={() => state()}>Confirm</button>
         {/if}
         {#if state === location}
           <div class="info">Welcome, <b>{name}</b>.</div>
           <input class="input" placeholder="Enter a game name" bind:value={room} on:keydown={submit} autofocus />
-          <button class="button" disabled={!room} on:click={() => request = state()}>Confirm</button>
+          <button class="button" disabled={!room} on:click={() => state()}>Confirm</button>
         {/if}
         {#if errorMessage}
           <div class="error">{errorMessage}</div>
