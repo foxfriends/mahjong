@@ -4,6 +4,26 @@
     <meta charset="UTF-8" />
     <title>Mahjong</title>
     <script src="./index.js" defer></script>
+    <style>
+      :root {
+        --image-table: url('./images/table.png')
+      }
+        
+      body {
+        position: relative;
+        margin: 0;
+        padding: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      :global(#root) {
+        position: absolute;
+        width: 100vw;
+        height: 100vh;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
