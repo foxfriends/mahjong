@@ -4,11 +4,11 @@ export default class Result {
 }
 
 export class Ok extends Result {
-    constructor(value) { this.value = value; }
+    constructor(value) { super(); this.value = value; }
     unwrap() { return this.value; }
 }
 
 export class Err extends Result {
-    constructor(error) { this.error = error; }
+    constructor(error) { super(); this.error = error; }
     unwrap() { throw this.error; }
 }

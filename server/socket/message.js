@@ -5,7 +5,11 @@ export default class Message {
         this.response = response;
     }
 
-    respond(subject, body) {
-        this.response({ subject, body });
+    success(body) {
+        this.response({ body });
+    }
+
+    failure(error) {
+        this.response({ error });
     }
 }
