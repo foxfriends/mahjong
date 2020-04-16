@@ -41,22 +41,23 @@
 </script>
 
 <div class="layer">
-  <Table>
+  <Table angle={state === PLAY ? 50 : 0}>
   </Table>
 </div>
 
 {#if state !== PLAY}
-  <div class="layer">
+  <div class="layer title">
     <Title>
       <div class="form">
         {#if state === identification}
           <input class="input" placeholder="Enter your name" bind:value={name} on:keydown={submit} autofocus />
+          <button class="button" disabled={!name} on:click={() => request = state()}>Confirm</button>
         {/if}
         {#if state === location}
           <div class="info">Welcome, <b>{name}</b>.</div>
           <input class="input" placeholder="Enter a game name" bind:value={room} on:keydown={submit} autofocus />
+          <button class="button" disabled={!room} on:click={() => request = state()}>Confirm</button>
         {/if}
-        <button class="button" disabled={!name} on:click={() => request = state()}>Confirm</button>
         {#if errorMessage}
           <div class="error">{errorMessage}</div>
         {/if}
@@ -74,6 +75,10 @@
   height: 100%;
 }
 
+.title, .input, .button {
+  color: white;
+}
+
 .form {
   display: flex;
   flex-direction: column;
@@ -86,7 +91,7 @@
   font-size: 16pt;
   border: none;
   background: none;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
 
   font-family: var(--font-english);
   width: 100%;
@@ -94,8 +99,8 @@
 
 .button {
   background: none;
+  border: none;
   cursor: pointer;
-  border: 1px solid rgba(0, 0, 0, 0.12);
 
   margin: 8px 0;
   padding: 8px 16px;
@@ -104,8 +109,10 @@
   font-family: var(--font-english);
 }
 
+.button:disabled { opacity: 0.5 }
+
 .error, .info {
-  padding: 8px 0;
+  padding: 16px 0;
   font-size: 14pt;
   font-family: var(--font-english);
 }

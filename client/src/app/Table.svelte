@@ -1,5 +1,9 @@
+<script>
+  export let angle;
+</script>
+
 <div class="world">
-  <div class="table">
+  <div class="table" style="transform: rotateX({angle}deg)">
     <div class="top-edge" />
     <div class="left-edge" />
     <div class="right-edge" />
@@ -24,6 +28,7 @@
   transform: rotateX(50deg);
   background-image: var(--image-table);
   transform-style: preserve-3d;
+  transition: transform 2s;
 }
 
 .top-edge, .bottom-edge {
