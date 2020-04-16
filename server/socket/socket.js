@@ -7,6 +7,7 @@ export default class AsyncSocket {
     constructor(socket) {
         this.raw = socket;
         this.channel = new Channel();
+        this.game = null;
 
         this.raw.on('message', ({ subject, body }, response) => {
             this.channel.send(new Message(subject, body, response));
@@ -43,5 +44,14 @@ export default class AsyncSocket {
                 }
             });
         });
+    }
+
+    broadcast(message) {
+        this.raw.broadcast.to(this.game).send(message);
+    }
+
+    join(room) {
+        this.game = room;
+        this.raw.join(room);
     }
 }

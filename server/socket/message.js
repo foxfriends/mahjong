@@ -6,10 +6,10 @@ export default class Message {
     }
 
     success(body) {
-        this.response({ body });
+        this.response && this.response({ body });
     }
 
     failure(error) {
-        this.response({ error });
+        this.response && this.response({ error });
     }
 }

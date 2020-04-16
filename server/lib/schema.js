@@ -1,3 +1,5 @@
+import Message from '../socket/message.js';
+
 function player(name) {
     return { name, up: [], down: [], discarded: [] };
 }
@@ -72,6 +74,7 @@ export default class Schema {
 
         this.wind = basis.wind || 0;
         this.turn = basis.turn || 0;
+        this.started = basis.started || false;
         this.roll = basis.roll;
         this.draw = basis.draw;
 
@@ -91,10 +94,25 @@ export default class Schema {
     }
 
     addPlayer(name) {
-        if (!this.east) { this.east = player(name); }
-        else if (!this.west) { this.west = player(name); }
-        else if (!this.north) { this.north = player(name); }
-        else if (!this.south) { this.south = player(name); }
-        else throw new Error(`The game ${this.name} is full`);
+        if (this.started) {
+            throw new Error(`The game ${this.name} has already started.`);
+        }
+        if (!this.east) {
+            this.east = player(name);
+            return new Message('addPlayer', { position: 'east', name });
+        }
+        if (!this.west) {
+            this.west = player(name);
+            return new Message('addPlayer', { position: 'west', name });
+        }
+        if (!this.north) {
+            this.north = player(name);
+            return new Message('addPlayer', { position: 'north', name });
+        }
+        if (!this.south) {
+            this.south = player(name);
+            return new Message('addPlayer', { position: 'south', name });
+        }
+        throw new Error(`The game ${this.name} is full.`);
     }
 }

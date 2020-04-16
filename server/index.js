@@ -11,7 +11,7 @@ app.use(KoaStatic(mahjong_dist));
 const server = Http.createServer(app.callback());
 
 const io = IO(server);
-io.on('connection', SocketHandler(mahjong_state));
+io.on('connection', SocketHandler(io, mahjong_state));
 
 console.log(`Starting Mahjong on port ${mahjong_port}`);
 server.listen(mahjong_port || 1234);

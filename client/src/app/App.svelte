@@ -1,6 +1,7 @@
 <script>
   import Table from './Table.svelte';
   import Title from './Title.svelte';
+  import handler from '../game/handler.js';
 
   export let socket;
   let name, room;
@@ -14,7 +15,8 @@
     errorMessage = undefined;
 
     try {
-      await socket.send('location', { room });
+      const { schema } = await socket.send('location', { room });
+      handler(schema, socket);
       state = PLAY;
     } catch (error) {
       console.log(error);

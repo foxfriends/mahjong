@@ -4,7 +4,7 @@ import Fs from 'fs';
 
 const sockets = new Map();
 
-export default stateDirectory => {
+export default (io, stateDirectory) => {
     async function loadSchema(name) {
         const path = `${stateDirectory}/${name}`;
         try {
@@ -54,15 +54,22 @@ export default stateDirectory => {
             }
 
             if (!schema.hasPlayer(name)) {
-                if (!schema.hasSpace()) {
-                    location.fail(`The room ${room} is already full.`);
+                if (schema.started) {
+                    location.fail(`The game ${room} has started without you.`);
                     continue;
                 }
-                schema.addPlayer(name);
+                if (!schema.hasSpace()) {
+                    location.fail(`The game ${room} is already full.`);
+                    continue;
+                }
             }
 
-            socket.raw.join(room);
-            location.success();
+            socket.join(room);
+            if (!schema.hasPlayer(name)) {
+                socket.broadcast(schema.addPlayer(name));
+            }
+
+            location.success({ schema });
             return { room, schema };
         }
     }
