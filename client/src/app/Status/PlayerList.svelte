@@ -6,24 +6,36 @@
   <div class="player north">
     {#if $store.north}
       <span class="name">{$store.north.name}</span>
+      {#if $store.north.ready && !$store.started}
+        <div class="ready" />
+      {/if}
     {/if}
     <span class="icon">北</span>
   </div>
   <div class="player east">
     {#if $store.east}
       <span class="name">{$store.east.name}</span>
+      {#if $store.east.ready && !$store.started}
+        <div class="ready" />
+      {/if}
     {/if}
     <span class="icon">东</span>
   </div>
   <div class="player west">
     {#if $store.west}
       <span class="name">{$store.west.name}</span>
+      {#if $store.west.ready && !$store.started}
+        <div class="ready" />
+      {/if}
     {/if}
     <span class="icon">西</span>
   </div>
   <div class="player south">
     {#if $store.south}
       <span class="name">{$store.south.name}</span>
+      {#if $store.south.ready && !$store.started}
+        <div class="ready" />
+      {/if}
     {/if}
     <span class="icon">南</span>
   </div>
@@ -49,7 +61,7 @@
     background: rgba(255, 255, 255, 0.12);
   }
 
-  .name, .icon {
+  .name, .icon, .ready {
     position: absolute;
     left: 50%;
     top: 50%;
@@ -68,5 +80,12 @@
     font-family: var(--font-chinese);
     font-size: min(12vw, 12vh);
     color: rgba(255, 255, 255, 0.07);
+  }
+
+  .ready {
+    width: min(15vw, 15vh);
+    height: min(15vw, 15vh);
+    border: 3px solid white;
+    border-radius: 100%;
   }
 </style>

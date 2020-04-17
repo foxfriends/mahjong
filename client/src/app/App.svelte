@@ -31,6 +31,7 @@
 
     try {
       await socket.send('identification', { name });
+      socket.name = name;
       state = location;
     } catch (error) {
       errorMessage = error;
@@ -53,7 +54,7 @@
 
 {#if state === PLAY}
   <div class="layer">
-    <Status />
+    <Status {socket} />
   </div>
 {:else}
   <div class="layer title">

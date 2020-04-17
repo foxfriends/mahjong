@@ -1,7 +1,11 @@
 import Message from '../socket/message.js';
 
+const WINDS = ['east', 'west', 'north', 'south'];
+const DRAGONS = ['red', 'green', 'white'];
+const SUITS = ['circles', 'sticks', 'words'];
+
 export function player(name) {
-    return { name, up: [], down: [], discarded: [] };
+    return { name, up: [], down: [], discarded: [], ready: false };
 }
 
 function tile(suit, value) {
@@ -21,19 +25,19 @@ function * suit(suit) {
 }
 
 function * winds(suit) {
-    for (const wind of ['north', 'east', 'south', 'west']) {
+    for (const wind of WINDS) {
         yield * four(tile('wind', wind));
     }
 }
 
 function * dragons(suit) {
-    for (const dragon of ['red', 'green', 'white']) {
+    for (const dragon of DRAGONS) {
         yield * four(tile('dragon', dragon));
     }
 }
 
 function * tiles() {
-    for (const shape of ['circles', 'sticks', 'words']) {
+    for (const shape of SUITS) {
         yield * suit(shape);
     }
     yield * winds();
@@ -83,68 +87,62 @@ export default class Schema {
     }
 
     hasSpace() {
-        return !this.east || !this.west || !this.north || !this.south;
+        return WINDS.some(position => !this[position]);
     }
 
     hasPlayer(name) {
-        return (this.east && this.east.name == name) ||
-            (this.west && this.west.name == name) ||
-            (this.north && this.north.name == name) ||
-            (this.south && this.south.name == name);
+        return WINDS.some(position => this[position] && this[position].name === name);
+    }
+
+    playerWind(name) {
+        const position = WINDS.find(position => this[position] && this[position].name === name);
+        if (!position) {
+            throw new Error(`No player ${name} in game ${this.game}`);
+        }
+        return position;
     }
 
     start() {
-        if (this.started) {
-            throw new Error(`The game ${this.name} has already started.`);
-        }
-
+        this.assertStarted(false);
         this.started = true;
         return new Message('start');
     }
 
     addPlayer(name) {
-        if (this.started) {
-            throw new Error(`The game ${this.name} has already started.`);
-        }
-        if (!this.east) {
-            this.east = player(name);
-            return new Message('addPlayer', { position: 'east', name });
-        }
-        if (!this.west) {
-            this.west = player(name);
-            return new Message('addPlayer', { position: 'west', name });
-        }
-        if (!this.north) {
-            this.north = player(name);
-            return new Message('addPlayer', { position: 'north', name });
-        }
-        if (!this.south) {
-            this.south = player(name);
-            return new Message('addPlayer', { position: 'south', name });
+        this.assertStarted(false);
+        for (const position of WINDS) {
+            if (!this[position]) {
+                this[position] = player(name);
+                return new Message('addPlayer', { position, name });
+            }
         }
         throw new Error(`The game ${this.name} is full.`);
     }
 
     removePlayer(name) {
-        if (this.started) {
-            throw new Error(`The game ${this.name} has already started.`);
+        this.assertStarted(false);
+        const wind = this.playerWind(name);
+        delete this[wind];
+    }
+
+    readyPlayer(name, ready = true) {
+        this.assertStarted(false);
+        const position = this.playerWind(name);
+        this[position].ready = ready;
+        const allPlayers = WINDS
+            .map(position => this[position])
+            .filter(player => !!player);
+
+        if (allPlayers.length >= 2 && allPlayers.every(player => player.ready)) {
+            return this.start();
         }
-        if (this.east && this.east.name === name) {
-            delete this.east;
-            return new Message('removePlayer', { position: 'east' });
+
+        return new Message('readyPlayer', { position, ready });
+    }
+
+    assertStarted(started) {
+        if (this.started !== started) {
+            throw new Error(`The game ${this.name} has ${started ? 'not' : 'already'} started.`);
         }
-        if (this.west && this.west.name === name) {
-            delete this.west;
-            return new Message('removePlayer', { position: 'west' });
-        }
-        if (this.north && this.north.name === name) {
-            delete this.north;
-            return new Message('removePlayer', { position: 'north' });
-        }
-        if (this.south && this.south.name === name) {
-            delete this.south;
-            return new Message('removePlayer', { position: 'south' });
-        }
-        throw new Error(`There is no player named ${name} in game ${this.name}`);
     }
 }

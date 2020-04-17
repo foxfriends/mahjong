@@ -4,10 +4,12 @@ import Message from './message.js';
 export class Disconnect extends Error {}
 
 export default class AsyncSocket {
-    constructor(socket) {
+    constructor(socket, namespace) {
         this.raw = socket;
+        this.namespace = namespace;
         this.channel = new Channel();
         this.game = null;
+        this.name = null;
 
         this.raw.on('message', ({ subject, body }, response) => {
             this.channel.send(new Message(subject, body, response));
@@ -47,8 +49,14 @@ export default class AsyncSocket {
     }
 
     broadcast(message) {
-        this.raw.broadcast.to(this.game).send(message);
+        this.raw.to(this.game).send(message);
     }
+
+    emit(message) {
+        this.namespace.to(this.game).send(message);
+    }
+
+    identify(name) { this.name = name; }
 
     join(room) {
         this.game = room;

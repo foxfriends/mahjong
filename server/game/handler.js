@@ -46,6 +46,7 @@ export default (io, stateDirectory) => {
                 identification.fail(`The name ${name} is already in use.`);
                 continue;
             }
+            socket.identify(name);
             sockets.set(name, socket.raw);
             identification.success();
             return name;
@@ -92,7 +93,7 @@ export default (io, stateDirectory) => {
     }
 
     return async rawSocket => {
-        const socket = new AsyncSocket(rawSocket);
+        const socket = new AsyncSocket(rawSocket, io);
         let name, schema;
         try {
             name = await identification(socket);
@@ -101,8 +102,10 @@ export default (io, stateDirectory) => {
             for (;;) {
                 const message = await socket.recv();
                 try {
+                    console.log(message);
                     message.success(await handlers[message.subject](socket, schema, message.body));
                 } catch (error) {
+                    console.error(error);
                     message.fail(error);
                 }
             }

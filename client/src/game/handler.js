@@ -3,9 +3,10 @@ import { get } from 'svelte/store';
 import store from './store.js';
 
 export default async function handler(schema, socket) {
-    store.set(schema);
+    store.set(new Schema(schema));
     for (;;) {
         const message = await socket.recv();
+        console.log(message);
 
         const schema = new Schema(get(store));
         switch (message.subject) {
@@ -22,13 +23,19 @@ export default async function handler(schema, socket) {
                 store.set(schema);
                 break;
             }
+            case 'readyPlayer': {
+                const { position, ready } = message.body;
+                schema[position].ready = ready;
+                store.set(schema);
+                break;
+            }
             case 'start': {
                 schema.start();
                 store.set(schema);
                 break;
             }
             default:
-                console.log(`Unhandled message: ${JSON.stringify(message)}`);
+                console.warn(`Message went unhandled!`);
         }
     }
 }
