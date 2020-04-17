@@ -15,6 +15,12 @@ export default async function handler(schema, socket) {
                 store.set(schema);
                 break;
             }
+            case 'start': {
+                schema.start();
+                store.set(schema);
+            }
+            default:
+                console.log(`Unhandled message: ${JSON.stringify(message)}`);
         }
     }
 }

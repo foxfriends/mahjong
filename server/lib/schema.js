@@ -93,6 +93,15 @@ export default class Schema {
             (this.south && this.south.name == name);
     }
 
+    start() {
+        if (this.started) {
+            throw new Error(`The game ${this.name} has already started.`);
+        }
+
+        this.started = true;
+        return new Message('start');
+    }
+
     addPlayer(name) {
         if (this.started) {
             throw new Error(`The game ${this.name} has already started.`);

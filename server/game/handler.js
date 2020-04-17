@@ -1,21 +1,37 @@
 import AsyncSocket, { Disconnect } from '../socket/socket.js';
 import Schema from '../lib/schema.js';
 import Fs from 'fs';
+import * as handlers from './handlers.js';
 
 const sockets = new Map();
+const games = new Map();
+const playersInGame = new WeakMap();
 
 export default (io, stateDirectory) => {
+    const filename = name => `${stateDirectory}/${name}`;
+    
     async function loadSchema(name) {
-        const path = `${stateDirectory}/${name}`;
+        // Use the cached games first, so all players share one instance.
+        if (games.has(name)) { return games.get(name); }
+
+        // Load from file if this game is not in memory already.
+        const path = filename(name);
+        let exists = true;
         try {
             await Fs.promises.access(path);
         } catch (e) {
-            return new Schema({ name });
+            exists = false;
         }
 
-        await Fs.promises.access(path, Fs.constants.R_OK);
-        const schema = JSON.parse(await Fs.promises.readFile(path));
-        return new Schema(schema);
+        let data = { name };
+        if (exists) {
+            await Fs.promises.access(path, Fs.constants.R_OK);
+            data = JSON.parse(await Fs.promises.readFile(path));
+        }
+        const schema = new Schema(data);
+        games.set(schema.name, schema);
+        playersInGame.set(schema, 0);
+        return schema;
     }
 
     async function identification(socket) {
@@ -64,36 +80,54 @@ export default (io, stateDirectory) => {
                 }
             }
 
-            socket.join(room);
+            socket.join(schema.name);
+            playersInGame.set(schema, playersInGame.get(schema) + 1);
             if (!schema.hasPlayer(name)) {
                 socket.broadcast(schema.addPlayer(name));
             }
 
             location.success({ schema });
-            return { room, schema };
+            return schema;
         }
     }
 
     return async rawSocket => {
         const socket = new AsyncSocket(rawSocket);
-        let name;
+        let name, schema;
         try {
             name = await identification(socket);
-            const { room, schema } = await location(socket, name);
+            schema = await location(socket, name);
 
-            console.log(`${name} has joined ${room}`);
             for (;;) {
-                let msg = await socket.recv();
+                const message = await socket.recv();
+                try {
+                    message.success(await handlers[message.subject](socket, schema, message.body));
+                } catch (error) {
+                    message.fail(error);
+                }
             }
         } catch (error) {
             if (error instanceof Disconnect) {
                 if (name) {
                     console.log(`${name} has left`);
                 }
+            } else {
+                console.log(`Unexpected error: ${error}`);
             }
         } finally {
             if (name) {
                 sockets.delete(name);
+            }
+            if (schema) {
+                playersInGame.set(schema, playersInGame.get(schema) - 1);
+                if (playersInGame.get(schema) == 0) {
+                    games.delete(schema.name);
+                    try {
+                        await Fs.promises.writeFile(filename(schema.name), JSON.stringify(schema));
+                    } catch (error) {
+                        console.error(error);
+                    }
+                }
             }
         }
     };
