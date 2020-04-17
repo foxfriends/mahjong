@@ -1,6 +1,7 @@
 <script>
   import Table from './Table.svelte';
   import Title from './Title.svelte';
+  import Status from './Status/Status.svelte';
   import handler from '../game/handler.js';
 
   export let socket;
@@ -50,7 +51,11 @@
   </Table>
 </div>
 
-{#if state !== PLAY}
+{#if state === PLAY}
+  <div class="layer">
+    <Status />
+  </div>
+{:else}
   <div class="layer title">
     <Title>
       <div class="form">

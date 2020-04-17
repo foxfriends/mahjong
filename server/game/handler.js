@@ -122,10 +122,12 @@ export default (io, stateDirectory) => {
                 playersInGame.set(schema, playersInGame.get(schema) - 1);
                 if (playersInGame.get(schema) == 0) {
                     games.delete(schema.name);
-                    try {
-                        await Fs.promises.writeFile(filename(schema.name), JSON.stringify(schema));
-                    } catch (error) {
-                        console.error(error);
+                    if (schema.started) {
+                        try {
+                            await Fs.promises.writeFile(filename(schema.name), JSON.stringify(schema));
+                        } catch (error) {
+                            console.error(error);
+                        }
                     }
                 }
             }
