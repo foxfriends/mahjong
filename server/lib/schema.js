@@ -1,6 +1,6 @@
 import Message from '../socket/message.js';
 
-function player(name) {
+export function player(name) {
     return { name, up: [], down: [], discarded: [] };
 }
 
@@ -123,5 +123,28 @@ export default class Schema {
             return new Message('addPlayer', { position: 'south', name });
         }
         throw new Error(`The game ${this.name} is full.`);
+    }
+
+    removePlayer(name) {
+        if (this.started) {
+            throw new Error(`The game ${this.name} has already started.`);
+        }
+        if (this.east && this.east.name === name) {
+            delete this.east;
+            return new Message('removePlayer', { position: 'east' });
+        }
+        if (this.west && this.west.name === name) {
+            delete this.west;
+            return new Message('removePlayer', { position: 'west' });
+        }
+        if (this.north && this.north.name === name) {
+            delete this.north;
+            return new Message('removePlayer', { position: 'north' });
+        }
+        if (this.south && this.south.name === name) {
+            delete this.south;
+            return new Message('removePlayer', { position: 'south' });
+        }
+        throw new Error(`There is no player named ${name} in game ${this.name}`);
     }
 }

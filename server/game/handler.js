@@ -120,6 +120,9 @@ export default (io, stateDirectory) => {
             }
             if (schema) {
                 playersInGame.set(schema, playersInGame.get(schema) - 1);
+                if (!schema.started) {
+                    socket.broadcast(schema.removePlayer(name));
+                }
                 if (playersInGame.get(schema) == 0) {
                     games.delete(schema.name);
                     if (schema.started) {

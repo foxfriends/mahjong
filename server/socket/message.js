@@ -9,7 +9,7 @@ export default class Message {
         this.response && this.response({ body });
     }
 
-    failure(error) {
+    fail(error) {
         this.response && this.response({ error });
     }
 }

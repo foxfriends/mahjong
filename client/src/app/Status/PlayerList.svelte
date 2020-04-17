@@ -7,21 +7,25 @@
     {#if $store.north}
       <span class="name">{$store.north.name}</span>
     {/if}
+    <span class="icon">北</span>
   </div>
   <div class="player east">
     {#if $store.east}
       <span class="name">{$store.east.name}</span>
     {/if}
+    <span class="icon">东</span>
   </div>
   <div class="player west">
     {#if $store.west}
       <span class="name">{$store.west.name}</span>
     {/if}
+    <span class="icon">西</span>
   </div>
   <div class="player south">
     {#if $store.south}
       <span class="name">{$store.south.name}</span>
     {/if}
+    <span class="icon">南</span>
   </div>
 </div>
 
@@ -40,18 +44,29 @@
   }
 
   .player {
+    position: relative;
     border: 1px solid rgba(255, 255, 255, 0.25);
     background: rgba(255, 255, 255, 0.12);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  }
+
+  .name, .icon {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) rotateZ(-45deg);
+    transform-origin: center;
   }
 
   .name {
-    transform: rotateZ(-45deg);
-    transform-origin: center;
     font-family: var(--font-english);
     font-size: 16pt;
+    font-weight: bold;
     color: white;
+  }
+
+  .icon {
+    font-family: var(--font-chinese);
+    font-size: min(12vw, 12vh);
+    color: rgba(255, 255, 255, 0.07);
   }
 </style>

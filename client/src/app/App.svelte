@@ -60,12 +60,12 @@
     <Title>
       <div class="form">
         {#if state === identification}
-          <input class="input" placeholder="Enter your name" bind:value={name} on:keydown={submit} autofocus />
+          <input class="input" placeholder="Enter your name" bind:value={name} on:keydown={submit} autofocus tabindex='1' />
           <button class="button" disabled={!name} on:click={() => state()}>Confirm</button>
         {/if}
         {#if state === location}
           <div class="info">Welcome, <b>{name}</b>.</div>
-          <input class="input" placeholder="Enter a game name" bind:value={room} on:keydown={submit} autofocus />
+          <input class="input" placeholder="Enter a game name" bind:value={room} on:keydown={submit} autofocus tabindex='1' />
           <button class="button" disabled={!room} on:click={() => state()}>Confirm</button>
         {/if}
         {#if errorMessage}
