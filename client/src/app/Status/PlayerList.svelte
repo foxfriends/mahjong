@@ -1,44 +1,28 @@
 <script>
   import store from '../../game/store.js';
+
+  const CHARACTER = {
+    Pei: '北',
+    Nan: '南',
+    Shaa: '西',
+    Ton: '东',
+  };
+
+  export let order;
 </script>
 
 <div class="container">
-  <div class="player north">
-    {#if $store.Pei}
-      <span class="name">{$store.Pei.name}</span>
-      {#if $store.Pei.ready && !$store.started}
-        <div class="ready" />
+  {#each order as position}
+    <div class="player">
+      {#if $store[position]}
+        <span class="name">{$store[position].name}</span>
+        {#if $store[position].ready && !$store.started}
+          <div class="ready" />
+        {/if}
       {/if}
-    {/if}
-    <span class="icon">北</span>
-  </div>
-  <div class="player east">
-    {#if $store.Ton}
-      <span class="name">{$store.Ton.name}</span>
-      {#if $store.Ton.ready && !$store.started}
-        <div class="ready" />
-      {/if}
-    {/if}
-    <span class="icon">东</span>
-  </div>
-  <div class="player west">
-    {#if $store.Shaa}
-      <span class="name">{$store.Shaa.name}</span>
-      {#if $store.Shaa.ready && !$store.started}
-        <div class="ready" />
-      {/if}
-    {/if}
-    <span class="icon">西</span>
-  </div>
-  <div class="player south">
-    {#if $store.Nan}
-      <span class="name">{$store.Nan.name}</span>
-      {#if $store.Nan.ready && !$store.started}
-        <div class="ready" />
-      {/if}
-    {/if}
-    <span class="icon">南</span>
-  </div>
+      <span class="icon">{CHARACTER[position]}</span>
+    </div>
+  {/each}
 </div>
 
 <style>

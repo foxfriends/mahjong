@@ -1,9 +1,9 @@
 import AsyncSocket, { Disconnect } from '../socket/socket.js';
 import Schema from '../lib/schema.js';
 import Fs from 'fs';
+import sockets from './sockets.js';
 import * as handlers from './handlers.js';
 
-const sockets = new Map();
 const games = new Map();
 const playersInGame = new WeakMap();
 
@@ -47,7 +47,7 @@ export default (io, stateDirectory) => {
                 continue;
             }
             socket.identify(name);
-            sockets.set(name, socket.raw);
+            sockets.set(name, socket);
             identification.success();
             return name;
         }
@@ -87,7 +87,7 @@ export default (io, stateDirectory) => {
                 socket.broadcast(schema.addPlayer(name));
             }
 
-            location.success({ schema });
+            location.success({ schema: Schema.concealed(schema, name) });
             return schema;
         }
     }

@@ -30,7 +30,24 @@ export default async function handler(schema, socket) {
                 break;
             }
             case 'start': {
-                schema.start();
+                store.set(new Schema(message.body));
+                break;
+            }
+            case 'reveal': {
+                const { reveal } = message.body;
+                for (const [index, info] of reveal) {
+                    schema.tiles[index] = info;
+                }
+                store.set(schema);
+                break;
+            }
+            case 'discard': {
+                const { position, tile, reveal } = message.body;
+                schema.tiles[tile] = reveal;
+                const index = schema[position].up.indexOf(tile);
+                schema[position].up.splice(index, 1);
+                schema[position].discarded.push(tile);
+                schema.discard = tile;
                 store.set(schema);
                 break;
             }

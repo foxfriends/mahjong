@@ -1,8 +1,10 @@
 import Message from '../socket/message.js';
 
-const WINDS = ['Ton', 'Shaa', 'Pei', 'Nan'];
+export const WINDS = ['Ton', 'Shaa', 'Pei', 'Nan'];
 const DRAGONS = ['Chun', 'Hatsu', 'Haku'];
 const SUITS = ['Pin', 'Sou', 'Man'];
+
+const NEXT_TURN = { Ton: 'Nan', Nan: 'Shaa', Shaa: 'Pei', Pei: 'Ton' };
 
 export function player(name) {
     return { name, up: [], down: [], discarded: [], ready: false };
@@ -68,6 +70,21 @@ function * walls(length) {
 }
 
 export default class Schema {
+    static concealed(basis, player) {
+        const schema = new Schema(basis);
+        const down = WINDS
+            .map(position => schema[position])
+            .filter(player => !!player)
+            .map(player => [...player.discarded, ...[].concat(...player.down)]);
+        const position = schema.playerWind(player);
+        const revealed = [...schema[position].up, ...down];
+
+        schema.tiles = schema.tiles
+            .map((tile, i) => revealed.includes(i) ? tile : null)
+
+        return schema;
+    }
+    
     constructor(basis = {}) {
         this.name = basis.name;
 
@@ -75,11 +92,12 @@ export default class Schema {
             this[position] = basis[position];
         }
 
-        this.wind = basis.wind || 0;
-        this.turn = basis.turn || 0;
+        this.wind = basis.wind || 'Ton';
+        this.turn = basis.turn || 'Ton';
         this.started = basis.started || false;
         this.roll = basis.roll;
         this.draw = basis.draw;
+        this.discard = basis.discard;
 
         this.tiles = basis.tiles || shuffle([...tiles()]);
         this.walls = basis.walls || [...walls(this.tiles.length)];
@@ -104,7 +122,41 @@ export default class Schema {
     start() {
         this.assertStarted(false);
         this.started = true;
-        return new Message('start');
+        this.roll = 3 +
+            Math.floor(Math.random() * 6) +
+            Math.floor(Math.random() * 6) +
+            Math.floor(Math.random() * 6);
+
+        let wall = 3 - ((this.roll + 2) % 4);
+        let stack = this.roll + 1;
+        const winds = ['Ton', 'Nan', 'Shaa', 'Pei'].filter(position => this[position]);
+        for (let i = 0; i < 3; ++i) {
+            for (const position of winds) {
+                for (let j = 0; j < 2; ++j) {
+                    if (stack >= this.walls[wall].length) {
+                        stack %= this.walls[wall].length;
+                        wall = (wall + 1) % 4;
+                    }
+
+                    const tiles = this.walls[wall][stack].splice(0, 2);
+                    this[position].up.push(...tiles);
+                    stack += 1;
+                }
+            }
+        }
+
+        for (const position of winds) {
+            if (stack >= this.walls[wall].length) {
+                stack %= this.walls[wall].length;
+                wall = (wall + 1) % 4;
+            }
+
+            const tile = this.walls[wall][stack].pop();
+            this[position].up.push(tile);
+            if (this.walls[wall][stack].length === 0) {
+                stack += 1;
+            }
+        }
     }
 
     addPlayer(name) {
@@ -143,5 +195,48 @@ export default class Schema {
         if (this.started !== started) {
             throw new Error(`The game ${this.name} has ${started ? 'not' : 'already'} started.`);
         }
+    }
+
+    async draw(socket) {
+        const { name } = socket;
+        const position = this.playerWind(position);
+        if (position !== this.turn) {
+            throw new Error(`It is not ${name}'s turn to draw.`);
+        }
+        if (this.walls.map(wall => wall.every(stack => stack.length === 0))) {
+            throw new Error('There are no more tiles to be drawn.');
+        }
+        let wall = 3 - ((this.roll + 2) % 4);
+        let stack = this.roll + 1;
+        for (;;) {
+            if (stack >= this.walls[wall].length) {
+                stack %= this.walls[wall].length;
+                wall = (wall + 1) % 4;
+            }
+            if (this.walls[wall][stack].length !== 0) {
+                break;
+            }
+            stack += 1;
+        }
+
+        const tile = this.walls[wall][stack].pop();
+        this.draw = tile;
+        delete this.discard;
+        this[position].up.push(tile);
+        await socket.send('draw', { tile, wall, stack, reveal: this.tiles[tile] });
+        return new Message('draw', { tile, wall, stack });
+    }
+
+    discard(name, tile) {
+        const position = this.playerWind(name);
+        const tileIndex = this[position].up.indexOf(tile);
+        if (tileIndex === -1) {
+            throw new Error(`Player ${name} does not hold tile ${tile}`);
+        }
+        this[position].up.splice(tileIndex, 1);
+        this[position].discarded.push(tile);
+        this.discard = tile;
+        do { this.turn = NEXT_TURN[this.turn]; } while (!this[this.turn]);
+        return new Message('discard', { position, tile, reveal: this.tiles[tile] });
     }
 }

@@ -20,26 +20,30 @@
   const WIDTH_PER_STACK = 3;
   const STACKS_WIDTH = STACKS_PER_WALL * WIDTH_PER_STACK;
   const WALL_WIDTH = `(${pct(STACKS_WIDTH)} - ${(STACKS_PER_WALL - 1) * 1.5}px)`;
-  const WALL_INSET = `calc(${pct(100 - STACKS_WIDTH)} / 4)`;
+  const WALL_INSET = pct(100 - STACKS_WIDTH / 8 * 3);
 
   const WALL_POSITION = [
     [
       `translate(calc(${pct(50)} - ${WALL_WIDTH} / 2), ${WALL_INSET})`,
+      'rotateZ(-15deg)',
     ],
     [
       `translateX(${pct(100)})`,
       'rotateZ(90deg)',
       `translate(calc(${pct(50)} - ${WALL_WIDTH} / 2), ${WALL_INSET})`,
+      'rotateZ(-15deg)',
     ],
     [
       `translate(${pct(100)}, ${pct(100)})`,
       'rotateZ(180deg)',
       `translate(calc(${pct(50)} - ${WALL_WIDTH} / 2), ${WALL_INSET})`,
+      'rotateZ(-15deg)',
     ],
     [
       `translateY(${pct(100)})`,
       'rotateZ(270deg)',
       `translate(calc(${pct(50)} - ${WALL_WIDTH} / 2), ${WALL_INSET})`,
+      'rotateZ(-15deg)',
     ],
   ];
 
@@ -73,7 +77,7 @@
   <div class="left" />
   <div class="right" />
   <div class="front" style={frontStyle} />
-  <div class="back" />
+  <div class="back">{ index }</div>
 </div>
 
 <style>
