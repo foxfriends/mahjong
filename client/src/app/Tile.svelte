@@ -15,6 +15,7 @@
   };
 
   const pct = amt => `min(${amt}vw, ${amt}vh)`;
+  const TILE_DEPTH = 1.75;
   const STACKS_PER_WALL = 17;
   const WIDTH_PER_STACK = 3;
   const STACKS_WIDTH = STACKS_PER_WALL * WIDTH_PER_STACK;
@@ -26,17 +27,17 @@
       `translate(calc(${pct(50)} - ${WALL_WIDTH} / 2), ${WALL_INSET})`,
     ],
     [
-      `translateX(${pct(98.5)})`,
+      `translateX(${pct(100)})`,
       'rotateZ(90deg)',
       `translate(calc(${pct(50)} - ${WALL_WIDTH} / 2), ${WALL_INSET})`,
     ],
     [
-      `translate(${pct(98.5)}, ${pct(98.5)})`,
+      `translate(${pct(100)}, ${pct(100)})`,
       'rotateZ(180deg)',
       `translate(calc(${pct(50)} - ${WALL_WIDTH} / 2), ${WALL_INSET})`,
     ],
     [
-      `translateY(${pct(98.5)})`,
+      `translateY(${pct(100)})`,
       'rotateZ(270deg)',
       `translate(calc(${pct(50)} - ${WALL_WIDTH} / 2), ${WALL_INSET})`,
     ],
@@ -50,8 +51,8 @@
       for (const [stack, j] of wall.map((stack, j) => [stack, j])) {
         const k = stack.indexOf(index);
         if (k === -1) continue;
-        const depth = k * 1.75;
-        const horizontal = j * 3;
+        const depth = k * TILE_DEPTH;
+        const horizontal = j * WIDTH_PER_STACK;
         position.push(`translateZ(min(${depth}vw, ${depth}vh))`);
         position.push(`translateX(${j * 3}px)`)
         position.push(`translateX(min(${horizontal}vw, ${horizontal}vh))`);
@@ -78,8 +79,8 @@
 <style>
   .tile {
     position: absolute;
-    top: 0;
-    left: 0;
+    left: max(-1.5vw, -1.5vh);
+    top: max(-2vw, -2vh);
     width: min(3vw, 3vh);
     height: min(4vw, 4vh);
 

@@ -22,6 +22,7 @@
 }
 
 .table {
+  position: relative;
   width: min(100vw, 100vh);
   height: min(100vw, 100vh);
   margin: 0 auto;
