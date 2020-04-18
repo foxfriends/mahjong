@@ -1,8 +1,8 @@
 import Message from '../socket/message.js';
 
-const WINDS = ['east', 'west', 'north', 'south'];
-const DRAGONS = ['red', 'green', 'white'];
-const SUITS = ['circles', 'sticks', 'words'];
+const WINDS = ['Ton', 'Shaa', 'Pei', 'Nan'];
+const DRAGONS = ['Chun', 'Hatsu', 'Haku'];
+const SUITS = ['Pin', 'Sou', 'Man'];
 
 export function player(name) {
     return { name, up: [], down: [], discarded: [], ready: false };
@@ -71,10 +71,9 @@ export default class Schema {
     constructor(basis = {}) {
         this.name = basis.name;
 
-        this.east = basis.east;
-        this.west = basis.west;
-        this.north = basis.north;
-        this.south = basis.south;
+        for (const position of WINDS) {
+            this[position] = basis[position];
+        }
 
         this.wind = basis.wind || 0;
         this.turn = basis.turn || 0;
@@ -83,7 +82,7 @@ export default class Schema {
         this.draw = basis.draw;
 
         this.tiles = basis.tiles || shuffle([...tiles()]);
-        this.walls = basis.walls || [...walls(tiles.length)];
+        this.walls = basis.walls || [...walls(this.tiles.length)];
     }
 
     hasSpace() {

@@ -1,6 +1,10 @@
 <div class="container">
   <h1 class="title">朋友一起打麻将</h1>
   <h2 class="subtitle">Mahjong with Friends</h2>
+  <!--
+  <h1 class="title">客满麻将</h1>
+  <h2 class="subtitle">Full House Mahjong</h2>
+  -->
   <slot />
 </div>
 

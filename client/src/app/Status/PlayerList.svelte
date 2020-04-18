@@ -4,36 +4,36 @@
 
 <div class="container">
   <div class="player north">
-    {#if $store.north}
-      <span class="name">{$store.north.name}</span>
-      {#if $store.north.ready && !$store.started}
+    {#if $store.Pei}
+      <span class="name">{$store.Pei.name}</span>
+      {#if $store.Pei.ready && !$store.started}
         <div class="ready" />
       {/if}
     {/if}
     <span class="icon">北</span>
   </div>
   <div class="player east">
-    {#if $store.east}
-      <span class="name">{$store.east.name}</span>
-      {#if $store.east.ready && !$store.started}
+    {#if $store.Ton}
+      <span class="name">{$store.Ton.name}</span>
+      {#if $store.Ton.ready && !$store.started}
         <div class="ready" />
       {/if}
     {/if}
     <span class="icon">东</span>
   </div>
   <div class="player west">
-    {#if $store.west}
-      <span class="name">{$store.west.name}</span>
-      {#if $store.west.ready && !$store.started}
+    {#if $store.Shaa}
+      <span class="name">{$store.Shaa.name}</span>
+      {#if $store.Shaa.ready && !$store.started}
         <div class="ready" />
       {/if}
     {/if}
     <span class="icon">西</span>
   </div>
   <div class="player south">
-    {#if $store.south}
-      <span class="name">{$store.south.name}</span>
-      {#if $store.south.ready && !$store.started}
+    {#if $store.Nan}
+      <span class="name">{$store.Nan.name}</span>
+      {#if $store.Nan.ready && !$store.started}
         <div class="ready" />
       {/if}
     {/if}

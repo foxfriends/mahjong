@@ -1,9 +1,9 @@
 <script>
-  export let angle;
+  export let angle = 0, rotation = 0;
 </script>
 
 <div class="world">
-  <div class="table" style="transform: rotateX({angle}deg)">
+  <div class="table" style="transform: rotateX({angle}deg) rotateZ({rotation}deg)">
     <div class="top-edge" />
     <div class="left-edge" />
     <div class="right-edge" />
@@ -22,9 +22,9 @@
 }
 
 .table {
-  position: absolute;
-  width: 100%;
-  height: 100%;
+  width: min(100vw, 100vh);
+  height: min(100vw, 100vh);
+  margin: 0 auto;
   transform: rotateX(50deg);
   background-image: var(--image-table);
   transform-style: preserve-3d;
