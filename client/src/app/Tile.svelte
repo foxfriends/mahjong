@@ -40,28 +40,6 @@
   const HAND_SIZE = 13;
   const HAND_WIDTH = HAND_SIZE * TILE_WIDTH;
   const HAND_INSET = pct(100 - STACKS_WIDTH / 4);
-</script>
-
-<script>
-  import { createEventDispatcher } from 'svelte';
-  import store from '../game/store.js';
-  import { WINDS } from '../lib/schema.js';
-  import images from '../tiles/Regular/*.svg';
-  export let tile, index, clickable = false;
-  const dispatch = createEventDispatcher();
-
-  let frontStyle;
-  $: {
-    if (tile) {
-      if (typeof tile.value === 'number') {
-        frontStyle = `background-image: url(${images[tile.suit+tile.value]})`;
-      } else {
-        frontStyle = `background-image: url(${images[tile.value]})`;
-      }
-    } else {
-      frontStyle = '';
-    }
-  };
 
   function handPosition(wind) {
     switch (wind) {
@@ -90,6 +68,56 @@
     }
   }
 
+  const DISCARD_INSET = pct(100 - STACKS_WIDTH / 8.0 * 3 - 2 * TILE_HEIGHT);
+  function discardPosition(wind) {
+    switch (wind) {
+      case 'Ton':
+        return [
+          `translate(${pct(50 - (STACKS_WIDTH - 2 * TILE_WIDTH) / 2.0)}, ${DISCARD_INSET})`,
+        ];
+      case 'Nan':
+        return [
+          `translateX(${pct(100)})`,
+          'rotateZ(90deg)',
+          `translate(${pct(50 - (STACKS_WIDTH - 2 * TILE_WIDTH) / 2.0)}, ${DISCARD_INSET})`,
+        ];
+      case 'Shaa':
+        return [
+          `translate(${pct(100)}, ${pct(100)})`,
+          'rotateZ(180deg)',
+          `translate(${pct(50 - (STACKS_WIDTH - 2 * TILE_WIDTH) / 2.0)}, ${DISCARD_INSET})`,
+        ];
+      case 'Pei':
+        return [
+          `translateY(${pct(100)})`,
+          'rotateZ(270deg)',
+          `translate(${pct(50 - (STACKS_WIDTH - 2 * TILE_WIDTH) / 2.0)}, ${DISCARD_INSET})`,
+        ];
+    }
+  }
+</script>
+
+<script>
+  import { createEventDispatcher } from 'svelte';
+  import store from '../game/store.js';
+  import { WINDS } from '../lib/schema.js';
+  import images from '../tiles/Regular/*.svg';
+  export let tile, index, clickable = false;
+  const dispatch = createEventDispatcher();
+
+  let frontStyle;
+  $: {
+    if (tile) {
+      if (typeof tile.value === 'number') {
+        frontStyle = `background-image: url(${images[tile.suit+tile.value]})`;
+      } else {
+        frontStyle = `background-image: url(${images[tile.value]})`;
+      }
+    } else {
+      frontStyle = '';
+    }
+  };
+
   function calcPosition(store) {
     for (const [wall, i] of store.walls.map((wall, i) => [wall, i])) {
       for (const [stack, j] of wall.map((stack, j) => [stack, j])) {
@@ -106,8 +134,8 @@
       }
     }
 
-    for (const wind of WINDS) {
-      if (store[wind] && store[wind].up.includes(index)) {
+    for (const wind of WINDS.filter(wind => store[wind])) {
+      if (store[wind].up.includes(index)) {
         const position = handPosition(wind);
         let i = store[wind].up.indexOf(index);
         if (store.draw === index) { i = HAND_SIZE + 1; }
@@ -116,6 +144,16 @@
         position.push(`translateX(${i * 3}px)`);
         position.push(`translateX(${pct(horizontal)})`);
         position.push(`rotateX(-90deg)`);
+        return `transform: ${position.join(' ')}`;
+      } else if (store[wind].discarded.includes(index)) {
+        const position = discardPosition(wind);
+        const i = store[wind].discarded.indexOf(index);
+        const j = i % HAND_WIDTH;
+        const k = Math.floor(i / HAND_WIDTH);
+        const horizontal = j * TILE_WIDTH;
+        const vertical = k * TILE_WIDTH;
+        position.push(`translate(${j * 3}px, ${k * 3}px)`);
+        position.push(`translate(${pct(horizontal)}, ${pct(vertical)})`);
         return `transform: ${position.join(' ')}`;
       }
     }

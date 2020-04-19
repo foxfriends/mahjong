@@ -77,7 +77,7 @@ export default class Schema {
             .filter(player => !!player)
             .map(player => [...player.discarded, ...[].concat(...player.down)]);
         const position = schema.playerWind(player);
-        const revealed = [...schema[position].up, ...down];
+        const revealed = [...schema[position].up, ...[].concat(...down)];
 
         schema.tiles = schema.tiles
             .map((tile, i) => revealed.includes(i) ? tile : null);
@@ -240,6 +240,7 @@ export default class Schema {
         this[position].up.splice(tileIndex, 1);
         this[position].discarded.push(tile);
         this.discarded = tile;
+        delete this.draw;
         this.nextTurn();
         return new Message('discard', { position, tile, reveal: this.tiles[tile] });
     }
