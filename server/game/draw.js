@@ -1,3 +1,5 @@
 export default async function draw(socket, schema, {}) {
-    socket.emit(schema.draw(socket));
+    const [message, reveal] = schema.draw(socket);
+    socket.emit(message);
+    return reveal;
 }

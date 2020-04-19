@@ -48,7 +48,17 @@ export default async function handler(schema, socket) {
                 schema[position].up.splice(index, 1);
                 schema[position].discarded.push(tile);
                 schema.discard = tile;
+                delete schema.drawn;
                 schema.nextTurn();
+                store.set(schema);
+                break;
+            }
+            case 'draw': {
+                const { tile, wall, stack } = message.body;
+                schema.walls[wall][stack].pop();
+                schema[schema.turn].up.push(tile);
+                schema.drawn = tile;
+                delete schema.discard;
                 store.set(schema);
                 break;
             }

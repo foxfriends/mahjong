@@ -138,7 +138,7 @@
       if (store[wind].up.includes(index)) {
         const position = handPosition(wind);
         let i = store[wind].up.indexOf(index);
-        if (store.draw === index) { i = HAND_SIZE + 1; }
+        if (store.drawn === index) { i = HAND_SIZE + 1; }
         const horizontal = i * TILE_WIDTH;
         position.push(`translateZ(${pct((TILE_HEIGHT - TILE_DEPTH) / 2)})`);
         position.push(`translateX(${i * 3}px)`);
@@ -170,8 +170,10 @@
   <div class="bottom {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
   <div class="left {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
   <div class="right {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
-  <div class="front {clickable ? 'clickable' : ''}" style={frontStyle} on:click={() => clickable && dispatch('click', { tile, index })} />
-  <div class="back {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })}>{ index }</div>
+  <div class="front {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })}>
+    <div class="image" style={frontStyle} />
+  </div>
+  <div class="back {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
 </div>
 
 <style>
@@ -186,15 +188,28 @@
     transform-origin: 50% 50% min(0.875vw, 0.875vh);
     transition: transform 1s;
     will-change: transform;
+
+    --color-back: #ffad00;
+    --color-side: #e89f05;
   }
 
-  .tile.clickable {
+  .clickable {
     cursor: pointer;
+    --color-back: #8dc8e8;
+    --color-side: #5c9eed;
   }
 
   .front, .back, .left, .right, .top, .bottom {
     position: absolute;
-    background-size: contain;
+    transform-style: preserve-3d;
+  }
+
+  .image {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
   }
 
   .front, .back {
@@ -215,12 +230,14 @@
   }
 
   .front {
+    box-sizing: border-box;
+    padding: 5%;
     transform: translateZ(min(1.75vw, 1.75vh)) translateZ(-1px);
-    background-color: white;
+    background-color: #fefefe;
   }
 
   .back {
-    background-color: #ffad00;
+    background-color: var(--color-back);
   }
 
   .top {
@@ -229,8 +246,8 @@
     transform-origin: top;
     transform: rotateX(90deg);
 
-    border-top: min(0.5vw, 0.5vh) solid #e89f05;
-    background-color: white;
+    border-top: min(0.5vw, 0.5vh) solid var(--color-side);
+    background-color: #fcfcfc;
   }
 
   .left {
@@ -239,8 +256,8 @@
     transform-origin: left;
     transform: rotateY(-90deg);
 
-    border-left: min(0.5vw, 0.5vh) solid #e89f05;
-    background-color: white;
+    border-left: min(0.5vw, 0.5vh) solid var(--color-side);
+    background-color: #fcfcfc;
   }
 
   .right {
@@ -249,8 +266,8 @@
     transform-origin: right;
     transform: rotateY(90deg);
 
-    border-right: min(0.5vw, 0.5vh) solid #e89f05;
-    background-color: white;
+    border-right: min(0.5vw, 0.5vh) solid var(--color-side);
+    background-color: #fcfcfc;
   }
 
   .bottom {
@@ -259,7 +276,7 @@
     transform-origin: bottom;
     transform: rotateX(-90deg);
 
-    border-bottom: min(0.5vw, 0.5vh) solid #e89f05;
-    background-color: white;
+    border-bottom: min(0.5vw, 0.5vh) solid var(--color-side);
+    background-color: #fcfcfc;
   }
 </style>

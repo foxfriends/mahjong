@@ -69,6 +69,8 @@ function * walls(length) {
     }
 }
 
+const sum = arr => arr.reduce((a, b) => a + b);
+
 export default class Schema {
     static concealed(basis, player) {
         const schema = new Schema(basis);
@@ -96,7 +98,7 @@ export default class Schema {
         this.turn = basis.turn || 'Ton';
         this.started = basis.started || false;
         this.roll = basis.roll;
-        this.draw = basis.draw;
+        this.drawn = basis.drawn;
         this.discarded = basis.discarded;
 
         this.tiles = basis.tiles || shuffle([...tiles()]);
@@ -122,13 +124,13 @@ export default class Schema {
     start() {
         this.assertStarted(false);
         this.started = true;
-        this.roll = 3 +
-            Math.floor(Math.random() * 6) +
-            Math.floor(Math.random() * 6) +
-            Math.floor(Math.random() * 6);
+        this.roll = [
+            Math.floor(Math.random() * 6) + 1,
+            Math.floor(Math.random() * 6) + 1,
+            Math.floor(Math.random() * 6) + 1,
+        ];
 
-        let wall = 3 - ((this.roll + 2) % 4);
-        let stack = this.roll + 1;
+        let [wall, stack] = this.nextDraw();
         const winds = ['Ton', 'Nan', 'Shaa', 'Pei'].filter(position => this[position]);
         for (let i = 0; i < 3; ++i) {
             for (const position of winds) {
@@ -159,7 +161,7 @@ export default class Schema {
         }
 
         const draw = this.walls[wall][stack].pop();
-        this.draw = draw;
+        this.drawn = draw;
         this[winds[0]].up.push(draw);
     }
 
@@ -201,34 +203,21 @@ export default class Schema {
         }
     }
 
-    async draw(socket) {
+    draw(socket) {
         const { name } = socket;
-        const position = this.playerWind(position);
+        const position = this.playerWind(name);
         if (position !== this.turn) {
             throw new Error(`It is not ${name}'s turn to draw.`);
         }
-        if (this.walls.map(wall => wall.every(stack => stack.length === 0))) {
-            throw new Error('There are no more tiles to be drawn.');
-        }
-        let wall = 3 - ((this.roll + 2) % 4);
-        let stack = this.roll + 1;
-        for (;;) {
-            if (stack >= this.walls[wall].length) {
-                stack %= this.walls[wall].length;
-                wall = (wall + 1) % 4;
-            }
-            if (this.walls[wall][stack].length !== 0) {
-                break;
-            }
-            stack += 1;
-        }
-
+        const [wall, stack] = this.nextDraw();
         const tile = this.walls[wall][stack].pop();
-        this.draw = tile;
+        this.drawn = tile;
         delete this.discarded;
         this[position].up.push(tile);
-        await socket.send('draw', { tile, wall, stack, reveal: this.tiles[tile] });
-        return new Message('draw', { tile, wall, stack });
+        return [
+            new Message('draw', { tile, wall, stack }),
+            { index: tile, reveal: this.tiles[tile] },
+        ];
     }
 
     discard(name, tile) {
@@ -240,12 +229,31 @@ export default class Schema {
         this[position].up.splice(tileIndex, 1);
         this[position].discarded.push(tile);
         this.discarded = tile;
-        delete this.draw;
+        delete this.drawn;
         this.nextTurn();
         return new Message('discard', { position, tile, reveal: this.tiles[tile] });
     }
 
     nextTurn() {
         do { this.turn = NEXT_TURN[this.turn]; } while (!this[this.turn]);
+    }
+
+    nextDraw() {
+        if (this.walls.every(wall => wall.every(stack => stack.length === 0))) {
+            throw new Error('There are no more tiles to be drawn.');
+        }
+        let wall = 3 - ((sum(this.roll) + 2) % 4);
+        let stack = sum(this.roll) + 1;
+        for (;;) {
+            if (stack >= this.walls[wall].length) {
+                stack %= this.walls[wall].length;
+                wall = (wall + 1) % 4;
+            }
+            if (this.walls[wall][stack].length !== 0) {
+                break;
+            }
+            stack += 1;
+        }
+        return [wall, stack];
     }
 }

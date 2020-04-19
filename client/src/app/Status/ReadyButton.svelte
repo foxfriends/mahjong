@@ -25,8 +25,8 @@
 <style>
   .button {
     position: absolute;
-    left: 50%;
-    bottom: 32px;
+    left: 50vw;
+    top: 95vh;
     width: 300px;
     height: 50px;
     transform: translateX(-50%);
