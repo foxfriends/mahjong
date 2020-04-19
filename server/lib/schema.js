@@ -80,7 +80,7 @@ export default class Schema {
         const revealed = [...schema[position].up, ...down];
 
         schema.tiles = schema.tiles
-            .map((tile, i) => revealed.includes(i) ? tile : null)
+            .map((tile, i) => revealed.includes(i) ? tile : null);
 
         return schema;
     }

@@ -26,10 +26,10 @@
   width: min(100vw, 100vh);
   height: min(100vw, 100vh);
   margin: 0 auto;
-  transform: rotateX(50deg);
   background-image: var(--image-table);
   transform-style: preserve-3d;
   transition: transform 2s;
+  will-change: transform;
 }
 
 .top-edge, .bottom-edge {

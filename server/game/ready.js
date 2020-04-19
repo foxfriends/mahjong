@@ -8,7 +8,9 @@ export default async function ready(socket, schema, { ready }) {
     } else {
         for (const position of WINDS) {
             if (!schema[position]) continue;
-            sockets.get(schema[position].name).send('start', schema);
+            sockets
+                .get(schema[position].name)
+                .send('start', Schema.concealed(schema, schema[position].name));
         }
     }
 }

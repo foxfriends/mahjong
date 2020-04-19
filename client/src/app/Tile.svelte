@@ -1,69 +1,118 @@
-<script>
-  import store from '../game/store.js';
-  import images from '../tiles/Regular/*.svg';
-  export let tile, index;
-
-  let frontStyle = '';
-  $: {
-    if (tile) {
-      if (typeof tile.value === 'number') {
-        frontStyle = `background-image: url(${images[tile.suit+tile.value]})`;
-      } else if (typeof tile.value === 'number') {
-        frontStyle = `background-image: url(${images[tile.value]})`;
-      }
-    }
-  };
-
+<script context="module">
   const pct = amt => `min(${amt}vw, ${amt}vh)`;
   const TILE_DEPTH = 1.75;
+  const TILE_WIDTH = 3;
+  const TILE_HEIGHT = 4;
+
   const STACKS_PER_WALL = 17;
-  const WIDTH_PER_STACK = 3;
-  const STACKS_WIDTH = STACKS_PER_WALL * WIDTH_PER_STACK;
+  const STACKS_WIDTH = STACKS_PER_WALL * TILE_WIDTH;
+
   const WALL_WIDTH = `(${pct(STACKS_WIDTH)} - ${(STACKS_PER_WALL - 1) * 1.5}px)`;
   const WALL_INSET = pct(100 - STACKS_WIDTH / 8 * 3);
-
   const WALL_POSITION = [
     [
-      `translate(calc(${pct(50)} - ${WALL_WIDTH} / 2), ${WALL_INSET})`,
-      'rotateZ(-15deg)',
+      `translate(${pct(50 - STACKS_WIDTH / 2)}, ${WALL_INSET})`,
+      // 'rotateZ(-15deg)',
     ],
     [
       `translateX(${pct(100)})`,
       'rotateZ(90deg)',
-      `translate(calc(${pct(50)} - ${WALL_WIDTH} / 2), ${WALL_INSET})`,
-      'rotateZ(-15deg)',
+      `translate(${pct(50 - STACKS_WIDTH / 2)}, ${WALL_INSET})`,
+      // 'rotateZ(-15deg)',
     ],
     [
       `translate(${pct(100)}, ${pct(100)})`,
       'rotateZ(180deg)',
-      `translate(calc(${pct(50)} - ${WALL_WIDTH} / 2), ${WALL_INSET})`,
-      'rotateZ(-15deg)',
+      `translate(${pct(50 - STACKS_WIDTH / 2)}, ${WALL_INSET})`,
+      // 'rotateZ(-15deg)',
     ],
     [
       `translateY(${pct(100)})`,
       'rotateZ(270deg)',
-      `translate(calc(${pct(50)} - ${WALL_WIDTH} / 2), ${WALL_INSET})`,
-      'rotateZ(-15deg)',
+      `translate(${pct(50 - STACKS_WIDTH / 2)}, ${WALL_INSET})`,
+      // 'rotateZ(-15deg)',
     ],
   ];
 
+  const HAND_SIZE = 13;
+  const HAND_INSET = pct(100 - STACKS_WIDTH / 4);
+</script>
+
+<script>
+  import store from '../game/store.js';
+  import { WINDS } from '../lib/schema.js';
+  import images from '../tiles/Regular/*.svg';
+  export let tile, index;
+
+  let frontStyle;
+  $: {
+    if (tile) {
+      if (typeof tile.value === 'number') {
+        frontStyle = `background-image: url(${images[tile.suit+tile.value]})`;
+      } else {
+        frontStyle = `background-image: url(${images[tile.value]})`;
+      }
+    } else {
+      frontStyle = '';
+    }
+  };
+
+  function handPosition(wind) {
+    switch (wind) {
+      case 'Ton':
+        return [
+          `translate(${pct(50 - TILE_WIDTH * HAND_SIZE / 2)}, ${HAND_INSET})`,
+        ];
+      case 'Nan':
+        return [
+          `translateX(${pct(100)})`,
+          'rotateZ(90deg)',
+          `translate(${pct(50 - TILE_WIDTH * HAND_SIZE / 2)}, ${HAND_INSET})`,
+        ];
+      case 'Shaa':
+        return [
+          `translate(${pct(100)}, ${pct(100)})`,
+          'rotateZ(180deg)',
+          `translate(${pct(50 - TILE_WIDTH * HAND_SIZE / 2)}, ${HAND_INSET})`,
+        ];
+      case 'Pei':
+        return [
+          `translateY(${pct(100)})`,
+          'rotateZ(270deg)',
+          `translate(${pct(50 - TILE_WIDTH * HAND_SIZE / 2)}, ${HAND_INSET})`,
+        ];
+    }
+  }
+
   function calcPosition(store) {
     for (const [wall, i] of store.walls.map((wall, i) => [wall, i])) {
-      const position = [
-        ...WALL_POSITION[i],
-      ];
       for (const [stack, j] of wall.map((stack, j) => [stack, j])) {
         const k = stack.indexOf(index);
         if (k === -1) continue;
+        const position = [...WALL_POSITION[i]];
         const depth = k * TILE_DEPTH;
-        const horizontal = j * WIDTH_PER_STACK;
-        position.push(`translateZ(min(${depth}vw, ${depth}vh))`);
-        position.push(`translateX(${j * 3}px)`)
-        position.push(`translateX(min(${horizontal}vw, ${horizontal}vh))`);
+        const horizontal = (STACKS_PER_WALL - j) * TILE_WIDTH;
+        position.push(`translateZ(${pct(depth)})`);
+        position.push(`translateX(${(STACKS_PER_WALL - j) * 3}px)`)
+        position.push(`translateX(${pct(horizontal)})`);
         position.push('rotateY(180deg)');
         return `transform: ${position.join(' ')}`;
       }
     }
+
+    for (const wind of WINDS) {
+      if (store[wind] && store[wind].up.includes(index)) {
+        const position = handPosition(wind);
+        const i = store[wind].up.indexOf(index);
+        const horizontal = i * TILE_WIDTH;
+        position.push(`translateZ(${pct((TILE_HEIGHT - TILE_DEPTH) / 2)})`);
+        position.push(`translateX(${i * 3}px)`);
+        position.push(`translateX(${pct(horizontal)})`);
+        position.push(`rotateX(-90deg)`);
+        return `transform: ${position.join(' ')}`;
+      }
+    }
+
     return '';
   }
 
@@ -91,6 +140,7 @@
     transform-style: preserve-3d;
     transform-origin: 50% 50% min(0.875vw, 0.875vh);
     transition: transform 1s;
+    will-change: transform;
   }
 
   .front, .back, .left, .right, .top, .bottom {
@@ -116,19 +166,8 @@
   }
 
   .front {
-    transform: translateZ(min(1.75vw, 1.75vh));
-    transform-style: preserve-3d;
-  }
-
-  .front::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    transform: translateZ(min(1.75vw, 1.75vh)) translateZ(-1px);
     background-color: white;
-    transform: translateZ(-1px);
   }
 
   .back {
@@ -141,7 +180,7 @@
     transform-origin: top;
     transform: rotateX(90deg);
 
-    border-top: 10px solid #e89f05;
+    border-top: min(0.5vw, 0.5vh) solid #e89f05;
     background-color: white;
   }
 
