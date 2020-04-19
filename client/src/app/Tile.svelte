@@ -7,34 +7,38 @@
   const STACKS_PER_WALL = 17;
   const STACKS_WIDTH = STACKS_PER_WALL * TILE_WIDTH;
 
-  const WALL_WIDTH = `(${pct(STACKS_WIDTH)} - ${(STACKS_PER_WALL - 1) * 1.5}px)`;
-  const WALL_INSET = pct(100 - STACKS_WIDTH / 8 * 3);
+  const WALL_INSET = pct(100 - STACKS_WIDTH / 8.0 * 3);
   const WALL_POSITION = [
     [
-      `translate(${pct(50 - STACKS_WIDTH / 2)}, ${WALL_INSET})`,
+      `translate(${pct(50 - STACKS_WIDTH / 2.0)}, ${WALL_INSET})`,
+      `translateX(-${(STACKS_PER_WALL - 1) * 0.75}px)`,
       // 'rotateZ(-15deg)',
     ],
     [
       `translateX(${pct(100)})`,
       'rotateZ(90deg)',
-      `translate(${pct(50 - STACKS_WIDTH / 2)}, ${WALL_INSET})`,
+      `translate(${pct(50 - STACKS_WIDTH / 2.0)}, ${WALL_INSET})`,
+      `translateX(-${(STACKS_PER_WALL - 1) * 0.75}px)`,
       // 'rotateZ(-15deg)',
     ],
     [
       `translate(${pct(100)}, ${pct(100)})`,
       'rotateZ(180deg)',
-      `translate(${pct(50 - STACKS_WIDTH / 2)}, ${WALL_INSET})`,
+      `translate(${pct(50 - STACKS_WIDTH / 2.0)}, ${WALL_INSET})`,
+      `translateX(-${(STACKS_PER_WALL - 1) * 0.75}px)`,
       // 'rotateZ(-15deg)',
     ],
     [
       `translateY(${pct(100)})`,
       'rotateZ(270deg)',
-      `translate(${pct(50 - STACKS_WIDTH / 2)}, ${WALL_INSET})`,
+      `translate(${pct(50 - STACKS_WIDTH / 2.0)}, ${WALL_INSET})`,
+      `translateX(-${(STACKS_PER_WALL - 1) * 0.75}px)`,
       // 'rotateZ(-15deg)',
     ],
   ];
 
   const HAND_SIZE = 13;
+  const HAND_WIDTH = HAND_SIZE * TILE_WIDTH;
   const HAND_INSET = pct(100 - STACKS_WIDTH / 4);
 </script>
 
@@ -61,25 +65,25 @@
     switch (wind) {
       case 'Ton':
         return [
-          `translate(${pct(50 - TILE_WIDTH * HAND_SIZE / 2)}, ${HAND_INSET})`,
+          `translate(${pct(50 - HAND_WIDTH / 2.0)}, ${HAND_INSET})`,
         ];
       case 'Nan':
         return [
           `translateX(${pct(100)})`,
           'rotateZ(90deg)',
-          `translate(${pct(50 - TILE_WIDTH * HAND_SIZE / 2)}, ${HAND_INSET})`,
+          `translate(${pct(50 - HAND_WIDTH / 2.0)}, ${HAND_INSET})`,
         ];
       case 'Shaa':
         return [
           `translate(${pct(100)}, ${pct(100)})`,
           'rotateZ(180deg)',
-          `translate(${pct(50 - TILE_WIDTH * HAND_SIZE / 2)}, ${HAND_INSET})`,
+          `translate(${pct(50 - HAND_WIDTH / 2.0)}, ${HAND_INSET})`,
         ];
       case 'Pei':
         return [
           `translateY(${pct(100)})`,
           'rotateZ(270deg)',
-          `translate(${pct(50 - TILE_WIDTH * HAND_SIZE / 2)}, ${HAND_INSET})`,
+          `translate(${pct(50 - HAND_WIDTH / 2.0)}, ${HAND_INSET})`,
         ];
     }
   }
@@ -91,7 +95,7 @@
         if (k === -1) continue;
         const position = [...WALL_POSITION[i]];
         const depth = k * TILE_DEPTH;
-        const horizontal = (STACKS_PER_WALL - j) * TILE_WIDTH;
+        const horizontal = (STACKS_PER_WALL - j - 1) * TILE_WIDTH;
         position.push(`translateZ(${pct(depth)})`);
         position.push(`translateX(${(STACKS_PER_WALL - j) * 3}px)`)
         position.push(`translateX(${pct(horizontal)})`);
