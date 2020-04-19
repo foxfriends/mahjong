@@ -128,11 +128,11 @@
 </script>
 
 <div class="tile" style={position}>
-  <div class="top {clickable ? 'clickable' : ''}"  on:click={() => clickable && dispatch('click', { tile, index })} />
-  <div class="bottom {clickable ? 'clickable' : ''}"  on:click={() => clickable && dispatch('click', { tile, index })} />
-  <div class="left {clickable ? 'clickable' : ''}"  on:click={() => clickable && dispatch('click', { tile, index })} />
-  <div class="right {clickable ? 'clickable' : ''}"  on:click={() => clickable && dispatch('click', { tile, index })} />
-  <div class="front {clickable ? 'clickable' : ''}" style={frontStyle}  on:click={() => clickable && dispatch('click', { tile, index })} />
+  <div class="top {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
+  <div class="bottom {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
+  <div class="left {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
+  <div class="right {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
+  <div class="front {clickable ? 'clickable' : ''}" style={frontStyle} on:click={() => clickable && dispatch('click', { tile, index })} />
   <div class="back {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })}>{ index }</div>
 </div>
 
