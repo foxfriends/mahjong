@@ -97,7 +97,7 @@ export default class Schema {
         this.started = basis.started || false;
         this.roll = basis.roll;
         this.draw = basis.draw;
-        this.discard = basis.discard;
+        this.discarded = basis.discarded;
 
         this.tiles = basis.tiles || shuffle([...tiles()]);
         this.walls = basis.walls || [...walls(this.tiles.length)];
@@ -225,7 +225,7 @@ export default class Schema {
 
         const tile = this.walls[wall][stack].pop();
         this.draw = tile;
-        delete this.discard;
+        delete this.discarded;
         this[position].up.push(tile);
         await socket.send('draw', { tile, wall, stack, reveal: this.tiles[tile] });
         return new Message('draw', { tile, wall, stack });
@@ -239,8 +239,12 @@ export default class Schema {
         }
         this[position].up.splice(tileIndex, 1);
         this[position].discarded.push(tile);
-        this.discard = tile;
-        do { this.turn = NEXT_TURN[this.turn]; } while (!this[this.turn]);
+        this.discarded = tile;
+        this.nextTurn();
         return new Message('discard', { position, tile, reveal: this.tiles[tile] });
+    }
+
+    nextTurn() {
+        do { this.turn = NEXT_TURN[this.turn]; } while (!this[this.turn]);
     }
 }

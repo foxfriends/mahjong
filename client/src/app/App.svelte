@@ -1,7 +1,7 @@
 <script>
   import Table from './Table.svelte';
   import Title from './Title.svelte';
-  import Tile from './Tile.svelte';
+  import Tiles from './Tiles.svelte';
   import Status from './Status/Status.svelte';
   import handler from '../game/handler.js';
   import store from '../game/store.js';
@@ -49,16 +49,12 @@
   }
 </script>
 
-<div class="layer">
+<div class="layer full">
   <Table
     angle={state === PLAY ? 60 : 0}
     rotation={$store ? ['Ton', 'Pei', 'Shaa', 'Nan'].indexOf($store.playerWind(name)) * 90 : 0}
     >
-    {#if $store}
-      {#each $store.tiles as tile, index}
-        <Tile {tile} {index} />
-      {/each}
-    {/if}
+    <Tiles {socket} />
   </Table>
 </div>
 
@@ -67,7 +63,7 @@
     <Status {socket} />
   </div>
 {:else}
-  <div class="layer title">
+  <div class="layer full title">
     <Title>
       <div class="form">
         {#if state === identification}
@@ -92,6 +88,9 @@
   position: absolute;
   top: 0;
   left: 0;
+}
+
+.full {
   width: 100%;
   height: 100%;
 }

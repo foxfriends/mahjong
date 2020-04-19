@@ -43,10 +43,12 @@
 </script>
 
 <script>
+  import { createEventDispatcher } from 'svelte';
   import store from '../game/store.js';
   import { WINDS } from '../lib/schema.js';
   import images from '../tiles/Regular/*.svg';
-  export let tile, index;
+  export let tile, index, clickable = false;
+  const dispatch = createEventDispatcher();
 
   let frontStyle;
   $: {
@@ -126,12 +128,12 @@
 </script>
 
 <div class="tile" style={position}>
-  <div class="top" />
-  <div class="bottom" />
-  <div class="left" />
-  <div class="right" />
-  <div class="front" style={frontStyle} />
-  <div class="back">{ index }</div>
+  <div class="top {clickable ? 'clickable' : ''}"  on:click={() => clickable && dispatch('click', { tile, index })} />
+  <div class="bottom {clickable ? 'clickable' : ''}"  on:click={() => clickable && dispatch('click', { tile, index })} />
+  <div class="left {clickable ? 'clickable' : ''}"  on:click={() => clickable && dispatch('click', { tile, index })} />
+  <div class="right {clickable ? 'clickable' : ''}"  on:click={() => clickable && dispatch('click', { tile, index })} />
+  <div class="front {clickable ? 'clickable' : ''}" style={frontStyle}  on:click={() => clickable && dispatch('click', { tile, index })} />
+  <div class="back {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })}>{ index }</div>
 </div>
 
 <style>
@@ -146,6 +148,10 @@
     transform-origin: 50% 50% min(0.875vw, 0.875vh);
     transition: transform 1s;
     will-change: transform;
+  }
+
+  .tile.clickable {
+    cursor: pointer;
   }
 
   .front, .back, .left, .right, .top, .bottom {

@@ -48,6 +48,7 @@ export default async function handler(schema, socket) {
                 schema[position].up.splice(index, 1);
                 schema[position].discarded.push(tile);
                 schema.discard = tile;
+                schema.nextTurn();
                 store.set(schema);
                 break;
             }

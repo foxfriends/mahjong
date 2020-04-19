@@ -106,7 +106,7 @@ export default (io, stateDirectory) => {
                     message.success(await handlers[message.subject](socket, schema, message.body));
                 } catch (error) {
                     console.error(error);
-                    message.fail(error);
+                    message.fail(error.message);
                 }
             }
         } catch (error) {
