@@ -157,6 +157,10 @@ export default class Schema {
                 stack += 1;
             }
         }
+
+        const draw = this.walls[wall][stack].pop();
+        this.draw = draw;
+        this[winds[0]].up.push(draw);
     }
 
     addPlayer(name) {

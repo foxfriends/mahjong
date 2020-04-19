@@ -1,5 +1,5 @@
 import sockets from './sockets.js';
-import { WINDS } from '../lib/schema.js';
+import Schema, { WINDS } from '../lib/schema.js';
 
 export default async function ready(socket, schema, { ready }) {
     const message = schema.readyPlayer(socket.name, ready);

@@ -107,7 +107,8 @@
     for (const wind of WINDS) {
       if (store[wind] && store[wind].up.includes(index)) {
         const position = handPosition(wind);
-        const i = store[wind].up.indexOf(index);
+        let i = store[wind].up.indexOf(index);
+        if (store.draw === index) { i = HAND_SIZE + 1; }
         const horizontal = i * TILE_WIDTH;
         position.push(`translateZ(${pct((TILE_HEIGHT - TILE_DEPTH) / 2)})`);
         position.push(`translateX(${i * 3}px)`);
