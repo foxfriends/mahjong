@@ -1,5 +1,7 @@
 # Mahjong
 
+>   Work in progress: This game is not yet playable.
+
 Play Mahjong in your browser with your friends.
 
 Please note this is the real Mahjong game, not the weird tile matching one. We don't play that one.
@@ -19,7 +21,7 @@ npm start
 ```
 
 You can now visit `localhost:1234` in your browser to play. Enter your name, and then enter a game name. All
-players (up to 4) who enter the same game name will join that game. Once the first player presses "Start", the
+players (up to 4) who enter the same game name will join that game. Once all players have pressed "Ready", the
 game will begin.
 
 ## Configuration
