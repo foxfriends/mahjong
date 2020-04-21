@@ -103,7 +103,7 @@ export default (io, stateDirectory) => {
                 const message = await socket.recv();
                 try {
                     console.log(message);
-                    message.success(await handlers[message.subject](socket, schema, message.body));
+                    message.success(await handlers[message.subject](socket, schema, message.body || {}));
                 } catch (error) {
                     console.error(error);
                     message.fail(error.message);

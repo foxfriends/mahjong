@@ -1,5 +1,9 @@
+import Vote, { cast } from './votes.js';
+
+class Draw extends Vote {
+    constructor() { super('Draw', 1); }
+}
+
 export default async function draw(socket, schema, {}) {
-    const [message, reveal] = schema.draw(socket);
-    socket.emit(message);
-    return reveal;
+    cast(socket, schema, new Draw);
 }

@@ -188,20 +188,22 @@
     transform-origin: 50% 50% min(0.875vw, 0.875vh);
     transition: transform 1s;
     will-change: transform;
+    pointer-events: none;
 
     --color-back: #ffad00;
     --color-side: #e89f05;
   }
 
-  .clickable {
-    cursor: pointer;
-    --color-back: #8dc8e8;
-    --color-side: #5c9eed;
-  }
-
   .front, .back, .left, .right, .top, .bottom {
     position: absolute;
     transform-style: preserve-3d;
+  }
+
+  .clickable {
+    cursor: pointer;
+    pointer-events: auto;
+    --color-back: #8dc8e8;
+    --color-side: #5c9eed;
   }
 
   .image {

@@ -1,7 +1,9 @@
 import Schema, { player } from '../lib/schema.js';
 import { get } from 'svelte/store';
 import store from './store.js';
+import timer from './timer.js';
 
+let currentVotes = {};
 export default async function handler(schema, socket) {
     store.set(new Schema(schema));
     for (;;) {
@@ -33,14 +35,6 @@ export default async function handler(schema, socket) {
                 store.set(new Schema(message.body));
                 break;
             }
-            case 'reveal': {
-                const { reveal } = message.body;
-                for (const [index, info] of reveal) {
-                    schema.tiles[index] = info;
-                }
-                store.set(schema);
-                break;
-            }
             case 'discard': {
                 const { position, tile, reveal } = message.body;
                 schema.tiles[tile] = reveal;
@@ -54,13 +48,54 @@ export default async function handler(schema, socket) {
                 break;
             }
             case 'draw': {
-                const { tile, wall, stack } = message.body;
+                currentVotes = {};
+                timer.set(null);
+                const { tile, wall, stack, reveal } = message.body;
+                if (reveal) {
+                    schema.tiles[tile] = reveal;
+                }
                 schema.walls[wall][stack].pop();
                 schema[schema.turn].up.push(tile);
                 schema.drawn = tile;
                 delete schema.discard;
                 store.set(schema);
                 break;
+            }
+            case 'take': {
+                currentVotes = {};
+                timer.set(null);
+                // TODO: add tile to someone's down
+                //       set 'drawn' to this tile, even though technically not drawn
+                //       reveal the other tiles from the set
+                //       change the turn
+                break;
+            }
+            case 'vote': {
+                const { position, vote } = message.body;
+                currentVotes[position] = vote;
+                if (!get(timer)) {
+                    const myWind = schema.playerWind(socket.name);
+                    timer.set({
+                        start: (new Date).getTime(),
+                        duration: 3000,
+                        handle: window.setTimeout(async () => {
+                            if (currentVotes[myWind]) return; // don't bother voting again
+                            try {
+                                await socket.send('ignore');
+                                timer.set(null);
+                            } catch (error) {
+                                console.error(error);
+                            }
+                        }, 3000),
+                    });
+                }
+                break;
+            }
+            case 'win': {
+                currentVotes = {};
+                timer.set(null);
+                // TODO: same as take?
+                //       but then show everything and end the game?
             }
             default:
                 console.warn(`Message went unhandled!`);

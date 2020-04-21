@@ -203,9 +203,7 @@ export default class Schema {
         }
     }
 
-    draw(socket) {
-        const { name } = socket;
-        const position = this.playerWind(name);
+    draw(position) {
         if (position !== this.turn) {
             throw new Error(`It is not ${name}'s turn to draw.`);
         }
@@ -216,7 +214,7 @@ export default class Schema {
         this[position].up.push(tile);
         return [
             new Message('draw', { tile, wall, stack }),
-            { index: tile, reveal: this.tiles[tile] },
+            this.tiles[tile],
         ];
     }
 

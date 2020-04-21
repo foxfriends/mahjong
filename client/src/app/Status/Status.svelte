@@ -1,6 +1,7 @@
 <script>
   import PlayerList from './PlayerList.svelte';
   import ReadyButton from './ReadyButton.svelte';
+  import Timer from './Timer.svelte';
   import store from '../../game/store.js';
 
   export let socket;
@@ -12,7 +13,10 @@
   };
 </script>
 
-{#if !$store.started}
+{#if $store.started}
+  <Timer />
+{:else}
   <PlayerList order={ORDER[$store.playerWind(socket.name)]} />
   <ReadyButton {socket} />
 {/if}
+
