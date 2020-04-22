@@ -146,13 +146,31 @@
     for (const wind of WINDS.filter(wind => store[wind])) {
       if (store[wind].up.includes(index)) {
         const position = handPosition(wind);
-        let i = [...store[wind].up].sort(order(store.tiles)).indexOf(index);
-        if (store.drawn === index) { i = HAND_SIZE + 1; }
+        let i = HAND_SIZE + 1;
+        if (index !== store.drawn) {
+          i = [...store[wind].up.filter(x => x !== store.drawn)].sort(order(store.tiles)).indexOf(index);
+        }
         const horizontal = i * TILE_WIDTH;
         position.push(`translateZ(${pct((TILE_HEIGHT - TILE_DEPTH) / 2)})`);
         position.push(`translateX(${i * 3}px)`);
         position.push(`translateX(${pct(horizontal)})`);
         position.push(`rotateX(-90deg)`);
+        return `transform: ${position.join(' ')}`;
+      } else if ([].concat(...store[wind].down).includes(index)) {
+        const position = handPosition(wind);
+        let i = store[wind].down.findIndex(meld => meld.includes(index));
+        let j = [...store[wind].down[i]].sort(order(store.tiles)).indexOf(index);
+        let k = 0;
+        if (j === 3) {
+          j = 1;
+          k = 1;
+        }
+        j += store[wind].up.filter(x => x !== store.drawn).length + 0.5;
+        let horizontal = (i * 3 + j) * TILE_WIDTH;
+        let depth = k * TILE_DEPTH;
+        position.push(`translateX(${j * 3}px)`);
+        position.push(`translateX(${pct(horizontal)})`);
+        position.push(`translateZ(${pct(depth)})`);
         return `transform: ${position.join(' ')}`;
       } else if (store[wind].discarded.includes(index)) {
         const position = discardPosition(wind);
