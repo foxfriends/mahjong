@@ -1,4 +1,13 @@
 <script context="module">
+  const SUITS = ['Pin', 'Sou', 'Man', 'wind', 'dragon'];
+  const VALUES = ['Ton', 'Nan', 'Shaa', 'Pei', 'Chun', 'Haku', 'Hatsu'];
+  
+  const suitOrder = (a, b) => SUITS.indexOf(a) - SUITS.indexOf(b);
+  const valueOrder = (a, b) => typeof a === 'number'
+    ? a - b
+    : VALUES.indexOf(a) - VALUES.indexOf(b);
+  const order = tiles => (a, b) => tiles[a] && tiles[b] ? suitOrder(tiles[a].suit, tiles[b].suit) || valueOrder(tiles[a].value, tiles[b].value) : 0;
+  
   const pct = amt => `min(${amt}vw, ${amt}vh)`;
   const TILE_DEPTH = 1.75;
   const TILE_WIDTH = 3;
@@ -137,7 +146,7 @@
     for (const wind of WINDS.filter(wind => store[wind])) {
       if (store[wind].up.includes(index)) {
         const position = handPosition(wind);
-        let i = store[wind].up.indexOf(index);
+        let i = [...store[wind].up].sort(order(store.tiles)).indexOf(index);
         if (store.drawn === index) { i = HAND_SIZE + 1; }
         const horizontal = i * TILE_WIDTH;
         position.push(`translateZ(${pct((TILE_HEIGHT - TILE_DEPTH) / 2)})`);
