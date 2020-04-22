@@ -111,7 +111,7 @@
   import store from '../game/store.js';
   import { WINDS } from '../lib/schema.js';
   import images from '../tiles/Regular/*.svg';
-  export let tile, index, clickable = false;
+  export let tile, index, clickable = false, selected = false;
   const dispatch = createEventDispatcher();
 
   let frontStyle;
@@ -165,8 +165,8 @@
           j = 1;
           k = 1;
         }
-        j += store[wind].up.filter(x => x !== store.drawn).length + 0.5;
-        let horizontal = (i * 3 + j) * TILE_WIDTH;
+        j += i * 3 + store[wind].up.filter(x => x !== store.drawn).length + 0.5;
+        let horizontal = j * TILE_WIDTH;
         let depth = k * TILE_DEPTH;
         position.push(`translateX(${j * 3}px)`);
         position.push(`translateX(${pct(horizontal)})`);
@@ -192,15 +192,17 @@
   $: position = calcPosition($store);
 </script>
 
-<div class="tile" style={position}>
-  <div class="top {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
-  <div class="bottom {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
-  <div class="left {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
-  <div class="right {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
-  <div class="front {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })}>
-    <div class="image" style={frontStyle} />
+<div class="selection {selected ? 'selected' : ''}">
+  <div class="tile" style={position}>
+    <div class="top {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
+    <div class="bottom {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
+    <div class="left {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
+    <div class="right {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
+    <div class="front {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })}>
+      <div class="image" style={frontStyle} />
+    </div>
+    <div class="back {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
   </div>
-  <div class="back {clickable ? 'clickable' : ''}" on:click={() => clickable && dispatch('click', { tile, index })} />
 </div>
 
 <style>
@@ -221,6 +223,22 @@
     --color-side: #e89f05;
   }
 
+  .selection {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 1s;
+  }
+
+  .selection {
+    transform: none;
+  }
+
+  .selection.selected {
+    transform: translateZ(max(1vw, 1vh));
+  }
+
   .front, .back, .left, .right, .top, .bottom {
     position: absolute;
     transform-style: preserve-3d;
@@ -231,6 +249,11 @@
     pointer-events: auto;
     --color-back: #8dc8e8;
     --color-side: #5c9eed;
+  }
+
+  .selection.selected .clickable {
+    --color-back: #addc91;
+    --color-side: #a1d884;
   }
 
   .image {
