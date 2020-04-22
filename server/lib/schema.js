@@ -222,7 +222,7 @@ export default class Schema {
 
     pong(position) {
         if (position === this.previousTurn) {
-            throw new Error(`You may not pick up your own discard.`);
+            throw new Error('You may not pick up your own discard.');
         }
         const hand = this[position].up;
         const discard = this.tiles[this.discarded];
@@ -234,6 +234,31 @@ export default class Schema {
         hand.splice(hand.indexOf(matching[0]), 1);
         hand.splice(hand.indexOf(matching[1]), 1);
         const tiles = [matching[0], matching[1], this.discarded];
+        this[position].down.push(tiles);
+        this[this.previousTurn].discarded.pop();
+        this.turn = position;
+        this.drawn = this.discarded;
+        delete this.discarded;
+        return new Message('take', { position, tiles, reveal: [[matching[0], this.tiles[matching[0]]], [matching[1], this.tiles[matching[1]]]] });
+    }
+
+    chow(position, matching) {
+        if (position === this.previousTurn) {
+            throw new Error('You may not pick up your own discard.');
+        }
+
+        if (matching.length !== 2) {
+            throw new Error('You must choose two tiles to chow with.');
+        }
+        const hand = this[position].up;
+        for (const tile of matching) {
+            console.log(hand, tile);
+            if (!hand.includes(tile)) {
+                throw new Error('You do not own these tiles.');
+            }
+            hand.splice(hand.indexOf(tile), 1);
+        }
+        const tiles = [...matching, this.discarded];
         this[position].down.push(tiles);
         this[this.previousTurn].discarded.pop();
         this.turn = position;

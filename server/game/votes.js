@@ -12,12 +12,10 @@ export default class Vote {
 }
 
 export function handle(socket, schema, votes) {
-    console.log(votes);
     const [action, winner] = WINDS
         .filter(wind => votes[wind])
         .map(wind => [votes[wind], wind])
         .reduce((a, b) => a[0].priority > b[0].priority ? a : b);
-    console.log(action, winner);
     switch (action.method) {
         case 'Draw': {
             const [message, reveal] = schema.draw(winner);
@@ -31,8 +29,19 @@ export function handle(socket, schema, votes) {
             socket.emit(message);
             break;
         }
+        case 'Chow': {
+            const message = schema.chow(winner, action.tiles);
+            socket.emit(message);
+            break;
+        }
+        case 'Kong': {
+            throw new Error('Unimplemented');
+        }
+        case 'Eyes': {
+            throw new Error('Unimplemented');
+        }
         default:
-            throw new Error(`Invalid method ${action.methd}`);
+            throw new Error(`Invalid method ${action.method}`);
     }
 }
 
