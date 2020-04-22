@@ -9,6 +9,7 @@
     const store = $store;
     if (store) {
       const myWind = store.playerWind(socket.name);
+      const myDiscard = store.previousTurn === myWind;
       const myTurn = store.turn === myWind;
       let toDraw = -1;
       if (store.roll !== undefined) {
@@ -40,19 +41,19 @@
           }
         }
 
-        if (index === store.discarded) {
+        if (index === store.discarded && !myDiscard) {
           const discarded = store.tiles[index];
 
-          const canPong = store[myWind].up.filter(tile => tile.suit === discarded.suit && tile.value === discarded.value).length >= 2;
-          const ofSuit = typeof discarded.value === 'number' && store[myWind].up.filter(tile => tile.suit === discarded.suit);
+          const canPong = store[myWind].up.filter(tile => store.tiles[tile].suit === discarded.suit && store.tiles[tile].value === discarded.value).length >= 2;
+          const ofSuit = typeof discarded.value === 'number' && store[myWind].up.filter(tile => store.tiles[tile].suit === discarded.suit);
           let canChow = false;
           if (ofSuit) {
             const required = [
-              ofSuit.find(tile => tile.value === discarded.value - 2),
-              ofSuit.find(tile => tile.value === discarded.value - 1),
+              ofSuit.find(tile => store.tiles[tile].value === discarded.value - 2),
+              ofSuit.find(tile => store.tiles[tile].value === discarded.value - 1),
               true,
-              ofSuit.find(tile => tile.value === discarded.value + 1),
-              ofSuit.find(tile => tile.value === discarded.value + 2),
+              ofSuit.find(tile => store.tiles[tile].value === discarded.value + 1),
+              ofSuit.find(tile => store.tiles[tile].value === discarded.value + 2),
             ];
             canChow = [
               required.slice(0, 3).every(x => x),
@@ -61,11 +62,10 @@
             ].some(x => x);
           }
 
-          if (canPong || canChow) {
+          if (canPong && !canChow) {
             return async () => {
               try {
-                const reveal = await socket.send('take', {});
-                store.reveal(reveal);
+                await socket.send('pong');
               } catch (error) {
                 console.error(error);
               }

@@ -37,18 +37,19 @@ export default async function handler(schema, socket) {
             }
             case 'discard': {
                 const { position, tile, reveal } = message.body;
+                currentVotes = { [position]: { method: 'Discard', priority: 0 }};
                 schema.tiles[tile] = reveal;
                 const index = schema[position].up.indexOf(tile);
                 schema[position].up.splice(index, 1);
                 schema[position].discarded.push(tile);
-                schema.discard = tile;
+                schema.discarded = tile;
                 delete schema.drawn;
                 schema.nextTurn();
                 store.set(schema);
                 break;
             }
             case 'draw': {
-                currentVotes = {};
+                window.clearTimeout(get(timer));
                 timer.set(null);
                 const { tile, wall, stack, reveal } = message.body;
                 if (reveal) {
@@ -62,12 +63,22 @@ export default async function handler(schema, socket) {
                 break;
             }
             case 'take': {
-                currentVotes = {};
+                const { position, tiles, reveal } = message.body;
+                window.clearTimeout(get(timer));
                 timer.set(null);
-                // TODO: add tile to someone's down
-                //       set 'drawn' to this tile, even though technically not drawn
-                //       reveal the other tiles from the set
-                //       change the turn
+                schema[position].down.push(tiles);
+                schema[schema.previousTurn].discarded.pop();
+                for (const [index, tile] of reveal) {
+                    schema.tiles[index] = tile;
+                }
+                for (const tile of tiles) {
+                    const index = schema[position].up.indexOf(tile);
+                    if (index !== -1) schema[position].up.splice(index, 1);
+                }
+                schema.drawn = schema.discarded;
+                delete schema.discarded;
+                schema.turn = position;
+                store.set(schema);
                 break;
             }
             case 'vote': {
@@ -92,8 +103,9 @@ export default async function handler(schema, socket) {
                 break;
             }
             case 'win': {
-                currentVotes = {};
+                window.clearTimeout(get(timer));
                 timer.set(null);
+                schema.complete = true;
                 // TODO: same as take?
                 //       but then show everything and end the game?
             }

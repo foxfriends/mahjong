@@ -11,7 +11,7 @@ export default class Vote {
     }
 }
 
-export function handle(schema, socket, votes) {
+export function handle(socket, schema, votes) {
     console.log(votes);
     const [action, winner] = WINDS
         .filter(wind => votes[wind])
@@ -26,26 +26,31 @@ export function handle(schema, socket, votes) {
             winnerSocket.send(message.subject, { ...message.body, reveal });
             break;
         }
+        case 'Pong': {
+            const message = schema.pong(winner);
+            socket.emit(message);
+            break;
+        }
         default:
-            throw new Error(`Unknown method ${action.methd}`);
+            throw new Error(`Invalid method ${action.methd}`);
     }
 }
 
 export function cast(socket, schema, vote) {
     let gameVotes = votes.get(schema);
-    if (vote.method === 'Ignore' && !gameVotes) return; // ignore cannot be the first vote
+    if (vote.method === 'Ignore' && !gameVotes) return; // discard must be the first vote
     gameVotes = gameVotes || {};
     const position = schema.playerWind(socket.name);
     if (gameVotes[position]) return; // cannot vote twice
     gameVotes[position] = vote;
 
     const allCast = WINDS
-        .filter(wind => schema[wind])
+        .filter(wind => schema[wind] && schema.previousTurn !== wind)
         .every(wind => gameVotes[wind]);
 
     if (allCast) {
         votes.delete(schema);
-        handle(schema, socket, gameVotes);
+        handle(socket, schema, gameVotes);
     } else {
         votes.set(schema, gameVotes);
         socket.emit(new Message('vote', { position, vote }));

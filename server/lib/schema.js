@@ -96,7 +96,9 @@ export default class Schema {
 
         this.wind = basis.wind || 'Ton';
         this.turn = basis.turn || 'Ton';
+        this.previousTurn = basis.previousTurn || 'Ton';
         this.started = basis.started || false;
+        this.completed = basis.completed || false;
         this.roll = basis.roll;
         this.drawn = basis.drawn;
         this.discarded = basis.discarded;
@@ -204,7 +206,7 @@ export default class Schema {
     }
 
     draw(position) {
-        if (position !== this.turn) {
+        if (position !== this.turn || this.drawn !== undefined) {
             throw new Error(`It is not ${name}'s turn to draw.`);
         }
         const [wall, stack] = this.nextDraw();
@@ -218,8 +220,33 @@ export default class Schema {
         ];
     }
 
+    pong(position) {
+        if (position === this.previousTurn) {
+            throw new Error(`You may not pick up your own discard.`);
+        }
+        const hand = this[position].up;
+        const discard = this.tiles[this.discarded];
+
+        const matching = hand.filter(tile => this.tiles[tile].suit === discard.suit && this.tiles[tile].value === discard.value);
+        if (matching.length < 2) {
+            throw new Error('You must have two matching tiles to pong.');
+        }
+        hand.splice(hand.indexOf(matching[0]), 1);
+        hand.splice(hand.indexOf(matching[1]), 1);
+        const tiles = [matching[0], matching[1], this.discarded];
+        this[position].down.push(tiles);
+        this[this.previousTurn].discarded.pop();
+        this.turn = position;
+        this.drawn = this.discarded;
+        delete this.discarded;
+        return new Message('take', { position, tiles, reveal: [[matching[0], this.tiles[matching[0]]], [matching[1], this.tiles[matching[1]]]] });
+    }
+
     discard(name, tile) {
         const position = this.playerWind(name);
+        if (position !== this.turn || this.discarded !== undefined) {
+            throw new Error(`It is not ${name}'s turn to discard.`);
+        }
         const tileIndex = this[position].up.indexOf(tile);
         if (tileIndex === -1) {
             throw new Error(`Player ${name} does not hold tile ${tile}`);
@@ -233,6 +260,7 @@ export default class Schema {
     }
 
     nextTurn() {
+        this.previousTurn = this.turn;
         do { this.turn = NEXT_TURN[this.turn]; } while (!this[this.turn]);
     }
 

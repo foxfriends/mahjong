@@ -148,11 +148,11 @@
       } else if (store[wind].discarded.includes(index)) {
         const position = discardPosition(wind);
         const i = store[wind].discarded.indexOf(index);
-        const j = i % HAND_WIDTH;
-        const k = Math.floor(i / HAND_WIDTH);
+        const j = i % HAND_SIZE;
+        const k = Math.floor(i / HAND_SIZE);
         const horizontal = j * TILE_WIDTH;
-        const vertical = k * TILE_WIDTH;
-        position.push(`translate(${j * 3}px, ${k * 3}px)`);
+        const vertical = -k * TILE_HEIGHT;
+        position.push(`translate(${j * 3}px, ${-k * 3}px)`);
         position.push(`translate(${pct(horizontal)}, ${pct(vertical)})`);
         return `transform: ${position.join(' ')}`;
       }
