@@ -299,6 +299,34 @@ export default class Schema {
         return new Message('take', { position, tiles, reveal: [[matching[0], this.tiles[matching[0]]], [matching[1], this.tiles[matching[1]]]] });
     }
 
+    exposedKong(position) {
+        if (position === this.previousTurn) {
+            throw new Error('You may not pick up your own discard.');
+        }
+        const hand = this[position].up;
+        const discard = this.tiles[this.discarded];
+
+        const matching = hand.filter(tile => this.tiles[tile].suit === discard.suit && this.tiles[tile].value === discard.value);
+        if (matching.length < 3) {
+            throw new Error('You must have three matching tiles to kong.');
+        }
+        hand.splice(hand.indexOf(matching[0]), 1);
+        hand.splice(hand.indexOf(matching[1]), 1);
+        hand.splice(hand.indexOf(matching[2]), 1);
+        const tiles = [matching[0], matching[1], matching[2], this.discarded, 'exposed'];
+        this[position].down.push(tiles);
+        this[this.previousTurn].discarded.pop();
+        this.turn = position;
+        const [wall, stack] = this.reverseDraw();
+        this.drawn = this.walls[wall][stack].pop();
+        this[position].up.push(this.drawn);
+        delete this.discarded;
+        return [
+            new Message('take', { position, tiles, wall, stack, reveal: [[matching[0], this.tiles[matching[0]]], [matching[1], this.tiles[matching[1]]], [matching[2], this.tiles[matching[2]]]] }),
+            [this.drawn, this.tiles[this.drawn]],
+        ];
+    }
+
     chow(position, matching) {
         if (position === this.previousTurn) {
             throw new Error('You may not pick up your own discard.');
@@ -393,6 +421,29 @@ export default class Schema {
                 break;
             }
             stack += 1;
+        }
+        return [wall, stack];
+    }
+
+    reverseDraw() {
+        if (this.walls.every(wall => wall.every(stack => stack.length === 0))) {
+            throw new Error('There are no more tiles to be drawn.');
+        }
+        let wall = 3 - ((sum(this.roll) + 2) % 4);
+        let stack = sum(this.roll);
+        for (;;) {
+            if (stack >= this.walls[wall].length) {
+                stack %= this.walls[wall].length;
+                wall = (wall + 1) % 4;
+            }
+            if (stack < 0) {
+                wall = (wall + 3) % 4;
+                stack = this.walls[wall].length - 1;
+            }
+            if (this.walls[wall][stack].length !== 0) {
+                break;
+            }
+            stack -= 1;
         }
         return [wall, stack];
     }

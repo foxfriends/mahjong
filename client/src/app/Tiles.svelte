@@ -125,7 +125,7 @@
         label: 'Kong',
         async handler() {
           try {
-            await socket.send('kong');
+            await socket.send('kong', { mode: 'exposed' });
             selection.set(new Set);
           } catch (error) {
             console.error(error);

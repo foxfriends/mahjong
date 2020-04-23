@@ -35,7 +35,11 @@ export function handle(socket, schema, votes) {
             break;
         }
         case 'Kong': {
-            throw new Error('Unimplemented');
+            const [message, reveal] = schema.exposedKong(winner);
+            const winnerSocket = sockets.get(schema[winner].name);
+            winnerSocket.broadcast(message);
+            winnerSocket.send(message.subject, { ...message.body, reveal: [...message.body.reveal, reveal] });
+            break;
         }
         case 'Eyes': {
             const message = schema.eyes(winner);

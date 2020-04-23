@@ -50,7 +50,7 @@ export default async function handler(schema, socket) {
                 break;
             }
             case 'draw': {
-                window.clearTimeout(get(timer));
+                window.clearTimeout((get(timer) || {}).handle);
                 selectionSets.set([]);
                 selection.set(new Set);
                 timer.set(null);
@@ -66,8 +66,8 @@ export default async function handler(schema, socket) {
                 break;
             }
             case 'take': {
-                const { position, tiles, reveal } = message.body;
-                window.clearTimeout(get(timer));
+                const { position, wall, stack, tiles, reveal } = message.body;
+                window.clearTimeout((get(timer) || {}).handle);
                 selectionSets.set([]);
                 selection.set(new Set);
                 timer.set(null);
@@ -80,7 +80,12 @@ export default async function handler(schema, socket) {
                     const index = schema[position].up.indexOf(tile);
                     if (index !== -1) schema[position].up.splice(index, 1);
                 }
-                schema.drawn = schema.discarded;
+                if (wall !== undefined && stack !== undefined) {
+                    schema.drawn = schema.walls[wall][stack].pop();
+                    schema[position].up.push(schema.drawn);
+                } else {
+                    schema.drawn = schema.discarded;
+                }
                 delete schema.discarded;
                 schema.turn = position;
                 store.set(schema);
@@ -109,7 +114,7 @@ export default async function handler(schema, socket) {
             }
             case 'win': {
                 const { position, tile, reveal } = message.body;
-                window.clearTimeout(get(timer));
+                window.clearTimeout((get(timer) || {}).handle);
                 selectionSets.set([]);
                 selection.set(new Set);
                 timer.set(null);
