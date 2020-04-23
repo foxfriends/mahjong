@@ -1,4 +1,5 @@
 <script>
+  import ActionButtons from './ActionButtons.svelte';
   import PlayerList from './PlayerList.svelte';
   import ReadyButton from './ReadyButton.svelte';
   import Timer from './Timer.svelte';
@@ -15,6 +16,7 @@
 
 {#if $store.started}
   <Timer />
+  <ActionButtons />
 {:else}
   <PlayerList order={ORDER[$store.playerWind(socket.name)]} />
   <ReadyButton {socket} />

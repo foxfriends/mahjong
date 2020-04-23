@@ -229,6 +229,7 @@
     height: 100%;
     transform-style: preserve-3d;
     transition: transform 1s;
+    pointer-events: none;
   }
 
   .selection {

@@ -2,6 +2,7 @@
   import { get } from 'svelte/store';
   import Tile from './Tile.svelte';
   import store from '../game/store.js';
+  import selectionSets from '../game/selectionSets.js';
   import selection from '../game/selection.js';
 
   export let socket;
@@ -40,6 +41,10 @@
       exactMatches = store[myWind].up.filter(tile => store.tiles[tile].suit === discarded.suit && store.tiles[tile].value === discarded.value);
       canPong = exactMatches.length >= 2;
       canKong = exactMatches.length >= 3;
+    } else {
+      exactMatches = [];
+      canPong = false;
+      canKong = false;
     }
   };
 
@@ -65,26 +70,28 @@
           required.slice(2, 4).every(x => typeof x === 'number') ? [required[2], required[3]] : null,
         ].filter(x => x);
       }
+    } else {
+      canChow = [];
     }
   }
 
-  let selectionSets = [];
   $: {
-    selectionSets = []
+    const list = [];
     if (exactMatches.length === 2) {
-      selectionSets.push({
+      list.push({
         tiles: exactMatches,
         label: 'Pong',
         async handler() {
           try {
             await socket.send('pong');
+            selection.set(new Set);
           } catch (error) {
             console.error(error);
           }
         },
       });
     } else if (exactMatches.length === 3) {
-      selectionSets.push(...[
+      list.push(...[
         [exactMatches[0], exactMatches[1]],
         [exactMatches[1], exactMatches[2]],
         [exactMatches[2], exactMatches[0]],
@@ -94,17 +101,19 @@
         async handler() {
           try {
             await socket.send('pong');
+            selection.set(new Set);
           } catch (error) {
             console.error(error);
           }
         },
       })));
-      selectionSets.push({
+      list.push({
         tiles: exactMatches,
         label: 'Kong',
         async handler() {
           try {
             await socket.send('kong');
+            selection.set(new Set);
           } catch (error) {
             console.error(error);
           }
@@ -113,12 +122,13 @@
     }
 
     if (myTurn) {
-      selectionSets.push(...canChow.map(tiles => ({
+      list.push(...canChow.map(tiles => ({
         tiles,
         label: 'Chow',
         async handler() {
           try {
             await socket.send('chow', { tiles });
+            selection.set(new Set);
           } catch (error) {
             console.error(error);
           }
@@ -127,17 +137,20 @@
     }
 
     const willWin = () => false; // TODO
-    selectionSets.push(...canChow.filter(willWin).map(tiles => ({
+    list.push(...canChow.filter(willWin).map(tiles => ({
       tiles,
       label: 'Win',
       async handler() {
         try {
           await socket.send('win', { method: 'Chow', tiles });
+          selection.set(new Set);
         } catch (error) {
           console.error(error);
         }
       },
     })));
+
+    selectionSets.set(list);
   }
 
   let handlers;
@@ -169,7 +182,7 @@
           }
         }
 
-        if ([].concat(...selectionSets.filter(canMatchSelection).map(set => set.tiles)).includes(index) && selecting) {
+        if ([].concat(...$selectionSets.filter(canMatchSelection).map(set => set.tiles)).includes(index) && selecting) {
           return () => {
             const selected = get(selection);
             if (selected.has(index)) {
@@ -206,7 +219,7 @@
                 console.error(error);
               }
             };
-          } else {
+          } else if ($selectionSets.length) {
             return () => {
               selecting = !selecting;
               if (!selecting) selection.set(new Set());

@@ -2,6 +2,8 @@ import Schema, { player } from '../lib/schema.js';
 import { get } from 'svelte/store';
 import store from './store.js';
 import timer from './timer.js';
+import selectionSets from './selectionSets.js';
+import selection from './selection.js';
 
 let currentVotes = {};
 export default async function handler(schema, socket) {
@@ -13,7 +15,6 @@ export default async function handler(schema, socket) {
         const schema = new Schema(get(store));
         switch (message.subject) {
             case 'addPlayer': {
-                console.log(message);
                 const { position, name } = message.body;
                 schema[position] = player(name);
                 store.set(schema);
@@ -50,6 +51,8 @@ export default async function handler(schema, socket) {
             }
             case 'draw': {
                 window.clearTimeout(get(timer));
+                selectionSets.set([]);
+                selection.set(new Set);
                 timer.set(null);
                 const { tile, wall, stack, reveal } = message.body;
                 if (reveal) {
@@ -65,6 +68,8 @@ export default async function handler(schema, socket) {
             case 'take': {
                 const { position, tiles, reveal } = message.body;
                 window.clearTimeout(get(timer));
+                selectionSets.set([]);
+                selection.set(new Set);
                 timer.set(null);
                 schema[position].down.push(tiles);
                 schema[schema.previousTurn].discarded.pop();
@@ -104,6 +109,8 @@ export default async function handler(schema, socket) {
             }
             case 'win': {
                 window.clearTimeout(get(timer));
+                selectionSets.set([]);
+                selection.set(new Set);
                 timer.set(null);
                 schema.complete = true;
                 // TODO: same as take?
