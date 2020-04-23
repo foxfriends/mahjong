@@ -151,10 +151,14 @@
           i = [...store[wind].up.filter(x => x !== store.drawn)].sort(order(store.tiles)).indexOf(index);
         }
         const horizontal = i * TILE_WIDTH;
-        position.push(`translateZ(${pct((TILE_HEIGHT - TILE_DEPTH) / 2)})`);
         position.push(`translateX(${i * 3}px)`);
         position.push(`translateX(${pct(horizontal)})`);
-        position.push(`rotateX(-90deg)`);
+        if (store.completed && wind === store.turn) {
+          // Reveal the winner's hand
+        } else {
+          position.push(`translateZ(${pct((TILE_HEIGHT - TILE_DEPTH) / 2)})`);
+          position.push(`rotateX(-90deg)`);
+        }
         return `transform: ${position.join(' ')}`;
       } else if ([].concat(...store[wind].down).includes(index)) {
         const position = handPosition(wind);

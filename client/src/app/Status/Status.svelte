@@ -16,7 +16,7 @@
 
 {#if $store.started}
   <Timer />
-  <ActionButtons />
+  <ActionButtons {socket} />
 {:else}
   <PlayerList order={ORDER[$store.playerWind(socket.name)]} />
   <ReadyButton {socket} />

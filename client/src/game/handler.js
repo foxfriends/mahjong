@@ -108,13 +108,22 @@ export default async function handler(schema, socket) {
                 break;
             }
             case 'win': {
+                const { position, tile, reveal } = message.body;
                 window.clearTimeout(get(timer));
                 selectionSets.set([]);
                 selection.set(new Set);
                 timer.set(null);
-                schema.complete = true;
-                // TODO: same as take?
-                //       but then show everything and end the game?
+                schema.completed = true;
+                if (tile !== undefined) {
+                    schema[position].up.push(tile);
+                    schema[schema.previousTurn].discarded.pop();
+                }
+                delete schema.discarded;
+                schema.turn = position;
+                for (const [index, tile] in reveal) {
+                    schema.tiles[index] = tile;
+                }
+                store.set(schema);
                 break;
             }
             default:

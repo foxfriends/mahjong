@@ -1,6 +1,10 @@
 <script>
+  import Schema from '../../lib/schema.js';
+  import store from '../../game/store.js';
   import selectionSets from '../../game/selectionSets.js';
   import selection from '../../game/selection.js';
+
+  export let socket;
 
   let actions = []
   $: actions = $selectionSets
@@ -8,6 +12,16 @@
       return selectionSet.tiles.every(tile => $selection.has(tile)) &&
         selectionSet.tiles.length === $selection.size;
     });
+
+  $: myWind = $store && $store.playerWind(socket.name);
+
+  async function win() {
+    try {
+      await socket.send('declare');
+    } catch (error) {
+      console.log(error);
+    }
+  }
 </script>
 
 <div class="container">
@@ -17,6 +31,11 @@
         {action.label}
       </button>
     {/each}
+    {#if $store && Schema.winningHand($store, $store[myWind]) && $store.turn === myWind}
+      <button class="action" on:click={win}>
+        Win
+      </button>
+    {/if}
   </div>
 </div>
 

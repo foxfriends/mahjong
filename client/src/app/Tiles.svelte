@@ -171,90 +171,94 @@
   $: {
     const store = $store;
     if (store) {
-      handlers = store.tiles.map((tile, index) => {
-        if (myTurn) {
-          // My turn
-          if (typeof store.drawn === 'number') {
-            if (store[store.turn].up.includes(index)) {
-              return async () => {
-                try {
-                  await socket.send('discard', { tile: index });
-                } catch (error) {
-                  console.error(error);
-                }
-              };
-            }
-          } else if (index === toDraw) {
-            return async () => {
-              try {
-                await socket.send('draw', {});
-              } catch (error) {
-                console.error(error);
-              }
-            };
-          }
-        }
-
-        if ([].concat(...$selectionSets.filter(canMatchSelection).map(set => set.tiles)).includes(index) && selecting) {
-          return () => {
-            const selected = get(selection);
-            if (selected.has(index)) {
-              selected.delete(index);
-            } else {
-              selected.add(index);
-            }
-            selection.set(selected);
-          };
-        }
-
-        if (index === store.discarded && !myDiscard) {
-          if (!canPong && !canKong && !canChow.length && canWin) {
-              return async () => {
-                try {
-                  await socket.send('win', { method: 'Eyes' });
-                } catch (error) {
-                  console.error(error);
-                }
-              };
-          } else if (canPong && !canKong && !canChow.length && !canWin) {
-            return async () => {
-              try {
-                await socket.send('pong');
-              } catch (error) {
-                console.error(error);
-              }
-            };
-          } else if (!canPong && !canKong && (canChow.length === 1 && myTurn) && !canWin) {
-            return async () => {
-              try {
-                await socket.send('chow', { tiles: canChow[0] });
-              } catch (error) {
-                console.error(error);
-              }
-            };
-          } else if ($selectionSets.length) {
-            return async () => {
-              try {
-                if (selecting) {
-                  selection.set(new Set());
-                  selecting = !selecting;
-                  await socket.send('ignore');
-                } else {
-                  // Clear the timeout so we don't get penalized for slow clicking, but let's leave the timer value so it
-                  // doesn't get reset
-                  const { handle } = get(timer) || {};
-                  if (handle) {
-                    window.clearTimeout(handle);
+      if (store.completed) {
+        handlers = [];
+      } else {
+        handlers = store.tiles.map((tile, index) => {
+          if (myTurn) {
+            // My turn
+            if (typeof store.drawn === 'number') {
+              if (store[store.turn].up.includes(index)) {
+                return async () => {
+                  try {
+                    await socket.send('discard', { tile: index });
+                  } catch (error) {
+                    console.error(error);
                   }
-                  selecting = !selecting;
-                }
-              } catch (error) {
-                console.error(error);
+                };
               }
+            } else if (index === toDraw) {
+              return async () => {
+                try {
+                  await socket.send('draw', {});
+                } catch (error) {
+                  console.error(error);
+                }
+              };
+            }
+          }
+
+          if ([].concat(...$selectionSets.filter(canMatchSelection).map(set => set.tiles)).includes(index) && selecting) {
+            return () => {
+              const selected = get(selection);
+              if (selected.has(index)) {
+                selected.delete(index);
+              } else {
+                selected.add(index);
+              }
+              selection.set(selected);
             };
           }
-        }
-      });
+
+          if (index === store.discarded && !myDiscard) {
+            if (!canPong && !canKong && !canChow.length && canWin) {
+                return async () => {
+                  try {
+                    await socket.send('win', { method: 'Eyes' });
+                  } catch (error) {
+                    console.error(error);
+                  }
+                };
+            } else if (canPong && !canKong && !canChow.length && !canWin) {
+              return async () => {
+                try {
+                  await socket.send('pong');
+                } catch (error) {
+                  console.error(error);
+                }
+              };
+            } else if (!canPong && !canKong && (canChow.length === 1 && myTurn) && !canWin) {
+              return async () => {
+                try {
+                  await socket.send('chow', { tiles: canChow[0] });
+                } catch (error) {
+                  console.error(error);
+                }
+              };
+            } else if ($selectionSets.length) {
+              return async () => {
+                try {
+                  if (selecting) {
+                    selection.set(new Set());
+                    selecting = !selecting;
+                    await socket.send('ignore');
+                  } else {
+                    // Clear the timeout so we don't get penalized for slow clicking, but let's leave the timer value so it
+                    // doesn't get reset
+                    const { handle } = get(timer) || {};
+                    if (handle) {
+                      window.clearTimeout(handle);
+                    }
+                    selecting = !selecting;
+                  }
+                } catch (error) {
+                  console.error(error);
+                }
+              };
+            }
+          }
+        });
+      }
     }
   }
 </script>

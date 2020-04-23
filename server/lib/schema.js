@@ -75,16 +75,17 @@ const eq = (a, b) => a.suit === b.suit && a.value === b.value;
 export default class Schema {
     static concealed(basis, player) {
         const schema = new Schema(basis);
-        const down = WINDS
-            .map(position => schema[position])
-            .filter(player => !!player)
-            .map(player => [...player.discarded, ...[].concat(...player.down)]);
-        const position = schema.playerWind(player);
-        const revealed = [...schema[position].up, ...[].concat(...down)];
+        if (!schema.completed) {
+            const down = WINDS
+                .map(position => schema[position])
+                .filter(player => !!player)
+                .map(player => [...player.discarded, ...[].concat(...player.down)]);
+            const position = schema.playerWind(player);
+            const revealed = [...schema[position].up, ...[].concat(...down)];
 
-        schema.tiles = schema.tiles
-            .map((tile, i) => revealed.includes(i) ? tile : null);
-
+            schema.tiles = schema.tiles
+                .map((tile, i) => revealed.includes(i) ? tile : null);
+        }
         return schema;
     }
 
@@ -321,6 +322,38 @@ export default class Schema {
         this.drawn = this.discarded;
         delete this.discarded;
         return new Message('take', { position, tiles, reveal: [[matching[0], this.tiles[matching[0]]], [matching[1], this.tiles[matching[1]]]] });
+    }
+
+    eyes(position) {
+        if (position === this.previousTurn) {
+            throw new Error('You may not pick up your own discard.');
+        }
+        const discard = this.tiles[this.discarded];
+        const player = { ...this[position] };
+        player.up = [...player.up, this.discarded];
+        if (!Schema.winningHand(this, player, this.discarded)) {
+            throw new Error('You may not pick up eyes if it does not win the game');
+        }
+        const tile = this.discarded;
+
+        this[this.previousTurn].discarded.pop();
+        this[position].up.push(this.discarded);
+        this.drawn = this.discarded;
+        this.turn = position;
+        delete this.discarded;
+        this.completed = true;
+        return new Message('win', { position, tile, reveal: this.tiles });
+    }
+
+    win(position) {
+        if (position !== this.turn) {
+            throw new Error('You can only win on your own turn.');
+        }
+        if (!Schema.winningHand(this, this[position])) {
+            throw new Error('You do not have a valid winning hand');
+        }
+        this.completed = true;
+        return new Message('win', { position, reveal: this.tiles });
     }
 
     discard(name, tile) {

@@ -38,7 +38,9 @@ export function handle(socket, schema, votes) {
             throw new Error('Unimplemented');
         }
         case 'Eyes': {
-            throw new Error('Unimplemented');
+            const message = schema.eyes(winner);
+            socket.emit(message);
+            break;
         }
         default:
             throw new Error(`Invalid method ${action.method}`);
