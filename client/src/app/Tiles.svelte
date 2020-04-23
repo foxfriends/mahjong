@@ -88,6 +88,7 @@
     }
   }
 
+  let selecting = false;
   $: {
     const list = [];
     if (exactMatches.length === 2) {
@@ -98,6 +99,7 @@
           try {
             await socket.send('pong');
             selection.set(new Set);
+            selecting = false;
           } catch (error) {
             console.error(error);
           }
@@ -115,6 +117,7 @@
           try {
             await socket.send('pong');
             selection.set(new Set);
+            selecting = false;
           } catch (error) {
             console.error(error);
           }
@@ -127,6 +130,7 @@
           try {
             await socket.send('kong', { mode: 'exposed' });
             selection.set(new Set);
+            selecting = false;
           } catch (error) {
             console.error(error);
           }
@@ -142,11 +146,28 @@
           try {
             await socket.send('chow', { tiles });
             selection.set(new Set);
+            selecting = false;
           } catch (error) {
             console.error(error);
           }
         },
       })));
+    }
+
+    if (canWin) {
+      list.push({
+        tiles: exactMatches,
+        label: 'Win',
+        async handler() {
+          try {
+            await socket.send('win', { method: 'Eyes' });
+            selection.set(new Set);
+            selecting = false;
+          } catch (error) {
+            console.error(error);
+          }
+        },
+      });
     }
 
     const willWin = () => false; // TODO
@@ -157,6 +178,7 @@
         try {
           await socket.send('win', { method: 'Chow', tiles });
           selection.set(new Set);
+          selecting = false;
         } catch (error) {
           console.error(error);
         }
@@ -167,7 +189,6 @@
   }
 
   let handlers;
-  let selecting = false;
   $: {
     const store = $store;
     if (store) {

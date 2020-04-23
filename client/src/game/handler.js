@@ -125,9 +125,7 @@ export default async function handler(schema, socket) {
                 }
                 delete schema.discarded;
                 schema.turn = position;
-                for (const [index, tile] in reveal) {
-                    schema.tiles[index] = tile;
-                }
+                schema.tiles = reveal;
                 store.set(schema);
                 break;
             }

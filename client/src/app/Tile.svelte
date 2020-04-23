@@ -169,12 +169,19 @@
           j = 1;
           k = 1;
         }
+        let flip = false;
+        if (store[wind].down[i][4] === 'concealed' && j !== 1) {
+          flip = true;
+        }
         j += i * 3 + store[wind].up.filter(x => x !== store.drawn).length + 0.5;
         let horizontal = j * TILE_WIDTH;
         let depth = k * TILE_DEPTH;
         position.push(`translateX(${j * 3}px)`);
         position.push(`translateX(${pct(horizontal)})`);
         position.push(`translateZ(${pct(depth)})`);
+        if (flip) {
+          position.push('rotateY(180deg)');
+        }
         return `transform: ${position.join(' ')}`;
       } else if (store[wind].discarded.includes(index)) {
         const position = discardPosition(wind);
