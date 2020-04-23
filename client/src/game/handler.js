@@ -115,6 +115,7 @@ export default async function handler(schema, socket) {
                 schema.complete = true;
                 // TODO: same as take?
                 //       but then show everything and end the game?
+                break;
             }
             default:
                 console.warn(`Message went unhandled!`);

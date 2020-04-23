@@ -1,7 +1,9 @@
 <script>
   import { get } from 'svelte/store';
   import Tile from './Tile.svelte';
+  import Schema from '../lib/schema.js';
   import store from '../game/store.js';
+  import timer from '../game/timer.js';
   import selectionSets from '../game/selectionSets.js';
   import selection from '../game/selection.js';
 
@@ -52,8 +54,19 @@
   $: canMatchSelection = selectionSet => [...$selection].every(tile => selectionSet.tiles.includes(tile));
 
   let canWin = false; // TODO: win condition
+  $: {
+    const store = $store;
+    if (discarded) {
+      const player = { ...store[myWind] };
+      player.up = [...player.up, store.discarded];
+      canWin = Schema.winningHand(store, player, store.discarded);
+    } else {
+      canWin = false;
+    }
+  }
+
   let canChow = [];
-  $:{
+  $: {
     const store = $store;
     if (discarded) {
       if (typeof discarded.value === 'number') {
@@ -220,9 +233,24 @@
               }
             };
           } else if ($selectionSets.length) {
-            return () => {
-              selecting = !selecting;
-              if (!selecting) selection.set(new Set());
+            return async () => {
+              try {
+                if (selecting) {
+                  selection.set(new Set());
+                  selecting = !selecting;
+                  await socket.send('ignore');
+                } else {
+                  // Clear the timeout so we don't get penalized for slow clicking, but let's leave the timer value so it
+                  // doesn't get reset
+                  const { handle } = get(timer) || {};
+                  if (handle) {
+                    window.clearTimeout(handle);
+                  }
+                  selecting = !selecting;
+                }
+              } catch (error) {
+                console.error(error);
+              }
             };
           }
         }

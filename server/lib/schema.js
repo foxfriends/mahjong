@@ -70,6 +70,7 @@ function * walls(length) {
 }
 
 const sum = arr => arr.reduce((a, b) => a + b);
+const eq = (a, b) => a.suit === b.suit && a.value === b.value;
 
 export default class Schema {
     static concealed(basis, player) {
@@ -86,7 +87,62 @@ export default class Schema {
 
         return schema;
     }
-    
+
+    static winningHand(schema, player, eye = null) {
+        function allMeld(tiles) {
+            function melds(a, b, c) {
+                if (eq(a, b) && eq(b, c)) return true;
+                if (a.suit !== b.suit && b.suit !== c.suit && typeof a.value === 'number') return false;
+                const values = [a.value, b.value, c.value].sort();
+                return values[0] === values[1] - 1 && values[1] === values[2] - 1;
+            }
+
+            if (tiles.length === 0) return true;
+            for (let i = 0; i < tiles.length - 2; ++i) {
+                for (let j = i + 1; j < tiles.length - 1; ++j) {
+                    for (let k = j + 1; k < tiles.length; ++k) {
+                        if (melds(tiles[i], tiles[j], tiles[k])) {
+                            const rest = [...tiles];
+                            rest.splice(k, 1);
+                            rest.splice(j, 1);
+                            rest.splice(i, 1);
+                            if (allMeld(rest)) return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        const hand = player.up;
+
+        if (hand.length % 3 !== 2) return false;
+        const tiles = hand.map(tile => schema.tiles[tile]);
+
+        if (eye) {
+            const matching = tiles.filter(other => eq(schema.tiles[eye], other));
+            if (matching.length < 2) return false;
+            // Remove this pair from the hand
+            const remaining = [...tiles];
+            remaining.splice(remaining.indexOf(matching[0]), 1);
+            remaining.splice(remaining.indexOf(matching[1]), 1);
+            // Then check if the rest of the meld nicely.
+            if (allMeld(remaining)) return true;
+        } else {
+            return tiles.some((tile, i) => {
+                const matching = tiles.slice(i + 1).filter(other => eq(tile, other));
+                if (matching.length >= 2) {
+                    // Remove this pair from the hand
+                    const remaining = [...tiles];
+                    remaining.splice(remaining.indexOf(matching[0]), 1);
+                    remaining.splice(remaining.indexOf(matching[1]), 1);
+                    // Then check if the rest of the meld nicely.
+                    if (allMeld(remaining)) return true;
+                }
+            });
+        }
+    }
+
     constructor(basis = {}) {
         this.name = basis.name;
 
