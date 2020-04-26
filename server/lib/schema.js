@@ -70,7 +70,7 @@ function * walls(length) {
 }
 
 const sum = arr => arr.reduce((a, b) => a + b);
-const eq = (a, b) => a.suit === b.suit && a.value === b.value;
+export const eq = (a, b) => a.suit === b.suit && a.value === b.value;
 
 export default class Schema {
     static concealed(basis, player) {
@@ -93,7 +93,7 @@ export default class Schema {
         function allMeld(tiles) {
             function melds(a, b, c) {
                 if (eq(a, b) && eq(b, c)) return true;
-                if (a.suit !== b.suit && b.suit !== c.suit && typeof a.value === 'number') return false;
+                if (a.suit !== b.suit || b.suit !== c.suit || typeof a.value !== 'number') return false;
                 const values = [a.value, b.value, c.value].sort();
                 return values[0] === values[1] - 1 && values[1] === values[2] - 1;
             }
@@ -331,11 +331,11 @@ export default class Schema {
 
     concealedKong(player, tile) {
         const position = this.playerWind(player);
-        const tileInfo = this.tiles[tile];
-        const matching = this[position].up.filter(tile => eq(this.tiles[tile], tileInfo));
         if (position !== this.turn) {
             throw new Error('It is not your turn.');
         }
+        const tileInfo = this.tiles[tile];
+        const matching = this[position].up.filter(tile => eq(this.tiles[tile], tileInfo));
         if (matching.length !== 4) {
             throw new Error('You must have four matching tiles to kong.');
         }
@@ -350,6 +350,37 @@ export default class Schema {
         const reveal = matching.map(index => [index, this.tiles[index]]);
         return [
             new Message('kong', { position, tiles, wall, stack, reveal }),
+            [this.drawn, this.tiles[this.drawn]],
+        ];
+    }
+
+    augmentedKong(player, tile) {
+        const position = this.playerWind(player);
+        if (position !== this.turn) {
+            throw new Error('It is not your turn.');
+        }
+
+        const tileInfo = this.tiles[tile];
+        const matching = this[position].down
+            .findIndex(meld => {
+                if (meld.length !== 3) { return false; }
+                return meld
+                    .map(tile => this.tiles[tile])
+                    .every(info => eq(tileInfo, info));
+            });
+        if (matching === -1) {
+            throw new Error('You do not have a pong to augment.');
+        }
+        this[position].up.splice(this[position].up.indexOf(tile), 1);
+        this[position].down[matching].push(tile, 'exposed');
+
+        const [wall, stack] = this.reverseDraw();
+        this.drawn = this.walls[wall][stack].pop();
+        this[position].up.push(this.drawn);
+
+        const reveal = [[tile, tileInfo]];
+        return [
+            new Message('kong', { position, tiles: [tile, 'exposed'], meld: matching, wall, stack, reveal }),
             [this.drawn, this.tiles[this.drawn]],
         ];
     }

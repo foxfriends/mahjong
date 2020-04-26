@@ -1,6 +1,6 @@
 <script>
   import TextTile from './TextTile.svelte';
-  import Schema from '../../lib/schema.js';
+  import Schema, { eq } from '../../lib/schema.js';
   import store from '../../game/store.js';
   import selectionSets from '../../game/selectionSets.js';
   import selection from '../../game/selection.js';
@@ -15,18 +15,27 @@
     });
 
   $: myWind = $store && $store.playerWind(socket.name);
-  $: kongs = $store[myWind].up
+  $: concealedKongs = $store[myWind].up
     .filter((tile, i, tiles) =>
       tiles
         .slice(i + 1)
         .map(tile => $store.tiles[tile])
-        .filter(info => info.suit === $store.tiles[tile].suit && info.value === $store.tiles[tile].value)
+        .filter(info => eq(info, $store.tiles[tile]))
         .length === 3
     );
+  $: exposedKongs = $store[myWind].up
+    .filter(tile =>
+      $store[myWind].down
+        .filter(meld => meld.length === 3)
+        .some(meld => meld
+          .map(tile => $store.tiles[tile])
+          .every(info => eq(info, $store.tiles[tile]))
+        )
+    );
 
-  async function kong(tile) {
+  async function kong(mode, tile) {
     try {
-      await socket.send('kong', { mode: 'concealed', tile });
+      await socket.send('kong', { mode, tile });
     } catch (error) {
       console.log(error);
     }
@@ -56,8 +65,14 @@
     {/if}
 
     {#if $store && $store.drawn !== undefined && $store.turn === myWind}
-      {#each kongs as tile}
-        <button class="action" on:click={() => kong(tile)}>
+      {#each concealedKongs as tile}
+        <button class="action" on:click={() => kong('concealed', tile)}>
+          Kong (<TextTile {tile} />)
+        </button>
+      {/each}
+
+      {#each exposedKongs as tile}
+        <button class="action" on:click={() => kong('augmented', tile)}>
           Kong (<TextTile {tile} />)
         </button>
       {/each}

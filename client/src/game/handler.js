@@ -61,7 +61,7 @@ export default async function handler(schema, socket) {
                 schema.walls[wall][stack].pop();
                 schema[schema.turn].up.push(tile);
                 schema.drawn = tile;
-                delete schema.discard;
+                delete schema.discarded;
                 store.set(schema);
                 break;
             }
@@ -92,8 +92,12 @@ export default async function handler(schema, socket) {
                 break;
             }
             case 'kong': {
-                const { position, wall, stack, tiles, reveal } = message.body;
-                schema[position].down.push(tiles);
+                const { position, wall, stack, tiles, meld, reveal } = message.body;
+                if (meld === undefined) {
+                    schema[position].down.push(tiles);
+                } else {
+                    schema[position].down[meld].push(...tiles);
+                }
                 for (const [index, tile] of reveal) {
                     schema.tiles[index] = tile;
                 }
