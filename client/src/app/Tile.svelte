@@ -8,7 +8,7 @@
     : VALUES.indexOf(a) - VALUES.indexOf(b);
   const order = tiles => (a, b) => tiles[a] && tiles[b] ? suitOrder(tiles[a].suit, tiles[b].suit) || valueOrder(tiles[a].value, tiles[b].value) : 0;
   
-  const pct = amt => `min(${amt}vw, ${amt}vh)`;
+  const pct = (amt, rev) => `${rev ? 'max' : 'min'}(${amt}vw, ${amt}vh)`;
   const TILE_DEPTH = 1.75;
   const TILE_WIDTH = 3;
   const TILE_HEIGHT = 4;
@@ -77,6 +77,7 @@
     }
   }
 
+  const DISCARD_SIZE = 10;
   const DISCARD_INSET = pct(100 - STACKS_WIDTH / 8.0 * 3 - 2 * TILE_HEIGHT);
   function discardPosition(wind) {
     switch (wind) {
@@ -186,12 +187,12 @@
       } else if (store[wind].discarded.includes(index)) {
         const position = discardPosition(wind);
         const i = store[wind].discarded.indexOf(index);
-        const j = i % HAND_SIZE;
-        const k = Math.floor(i / HAND_SIZE);
+        const j = i % DISCARD_SIZE;
+        const k = Math.floor(i / DISCARD_SIZE);
         const horizontal = j * TILE_WIDTH;
         const vertical = -k * TILE_HEIGHT;
         position.push(`translate(${j * 3}px, ${-k * 3}px)`);
-        position.push(`translate(${pct(horizontal)}, ${pct(vertical)})`);
+        position.push(`translate(${pct(horizontal)}, ${pct(vertical, true)})`);
         return `transform: ${position.join(' ')}`;
       }
     }
