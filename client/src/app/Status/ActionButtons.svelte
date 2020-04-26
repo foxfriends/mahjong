@@ -98,6 +98,7 @@
 
     display: flex;
     align-items: center;
+    justify-content: center;
     word-wrap: no-wrap;
   }
 </style>

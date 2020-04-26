@@ -132,11 +132,11 @@ export default class Schema {
         } else {
             return tiles.some((tile, i) => {
                 const matching = tiles.slice(i + 1).filter(other => eq(tile, other));
-                if (matching.length >= 2) {
+                if (matching.length === 1) {
                     // Remove this pair from the hand
                     const remaining = [...tiles];
+                    remaining.splice(i, 1);
                     remaining.splice(remaining.indexOf(matching[0]), 1);
-                    remaining.splice(remaining.indexOf(matching[1]), 1);
                     // Then check if the rest of the meld nicely.
                     if (allMeld(remaining)) return true;
                 }
@@ -401,7 +401,8 @@ export default class Schema {
         return new Message('win', { position, tile, reveal: this.tiles });
     }
 
-    win(position) {
+    win(player) {
+        const position = this.playerWind(player);
         if (position !== this.turn) {
             throw new Error('You can only win on your own turn.');
         }
