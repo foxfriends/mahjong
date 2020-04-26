@@ -6,6 +6,7 @@
   $: displayAngle = Math.min(90, Math.max(0, angle + adjustment));
   const SPEED = 5;
   function scroll(event) {
+    if (!scrollable) return;
     const direction = event.deltaY / Math.abs(event.deltaY);
     if (displayAngle + direction * SPEED <= 90 && displayAngle + direction * SPEED >= 0) {
       adjustment += direction * SPEED;
