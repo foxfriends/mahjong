@@ -53,6 +53,7 @@
   <Table
     angle={state === PLAY ? 60 : 0}
     rotation={$store ? ['Ton', 'Pei', 'Shaa', 'Nan'].indexOf($store.playerWind(name)) * 90 : 0}
+    scrollable={state === PLAY}
     >
     <Tiles {socket} />
   </Table>

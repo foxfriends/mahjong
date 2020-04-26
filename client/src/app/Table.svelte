@@ -1,9 +1,21 @@
 <script>
-  export let angle = 0, rotation = 0;
+  export let angle = 0, rotation = 0, scrollable = false;
+
+
+  let adjustment = 0;
+  $: displayAngle = Math.min(90, Math.max(0, angle + adjustment));
+  const SPEED = 5;
+  function scroll(event) {
+    const direction = event.deltaY / Math.abs(event.deltaY);
+    if (displayAngle + direction * SPEED <= 90 && displayAngle + direction * SPEED >= 0) {
+      adjustment += direction * SPEED;
+    }
+  }
+
 </script>
 
 <div class="world">
-  <div class="table" style="transform: rotateX({angle}deg) rotateZ({rotation}deg)">
+  <div class="table" style="transform: rotateX({displayAngle}deg) rotateZ({rotation}deg)">
     <div class="top-edge" />
     <div class="left-edge" />
     <div class="right-edge" />
@@ -11,6 +23,8 @@
     <slot />
   </div>
 </div>
+
+<svelte:window on:wheel={scroll} />
 
 <style>
 .world {
