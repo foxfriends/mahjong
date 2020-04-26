@@ -72,6 +72,31 @@ function * walls(length) {
 const sum = arr => arr.reduce((a, b) => a + b);
 export const eq = (a, b) => a.suit === b.suit && a.value === b.value;
 
+function allPairs([...tiles]) {
+    while (tiles.length) {
+        const tile = tiles.pop();
+        const index = tiles.findIndex(other => eq(tile, other));
+        if (index === -1) { return false; }
+        tiles.splice(index, 1);
+    }
+    return true;
+}
+
+function thirteenOrphans([...tiles]) {
+    const expectation = [
+        ...SUITS.map(suit => tile(suit, 1)),
+        ...SUITS.map(suit => tile(suit, 9)),
+        ...WINDS.map(wind => tile('wind', wind)),
+        ...DRAGONS.map(dragon => tile('dragon', dragon)),
+    ];
+    for (const expected in expectation) {
+        const index = tiles.findIndex(tile => eq(tile, expected));
+        if (index === -1) { return false; }
+        tiles.splice(index, 1);
+    }
+    return !!expectation.find(tile => eq(tile, tiles[0]));
+}
+
 export default class Schema {
     static concealed(basis, player) {
         const schema = new Schema(basis);
@@ -118,7 +143,12 @@ export default class Schema {
         const hand = player.up;
 
         if (hand.length % 3 !== 2) return false;
+
         const tiles = hand.map(tile => schema.tiles[tile]);
+        if (hand.length === 14) {
+            if (allPairs(tiles)) { return true; }
+            if (thirteenOrphans(tiles)) { return true; }
+        }
 
         if (eye) {
             const matching = tiles.filter(other => eq(schema.tiles[eye], other));
@@ -140,6 +170,7 @@ export default class Schema {
                     // Then check if the rest of the meld nicely.
                     if (allMeld(remaining)) return true;
                 }
+                return false;
             });
         }
     }
