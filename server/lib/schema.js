@@ -284,7 +284,7 @@ export default class Schema {
         const hand = this[position].up;
         const discard = this.tiles[this.discarded];
 
-        const matching = hand.filter(tile => this.tiles[tile].suit === discard.suit && this.tiles[tile].value === discard.value);
+        const matching = hand.filter(tile => eq(this.tiles[tile], discard));
         if (matching.length < 2) {
             throw new Error('You must have two matching tiles to pong.');
         }
@@ -296,7 +296,8 @@ export default class Schema {
         this.turn = position;
         this.drawn = this.discarded;
         delete this.discarded;
-        return new Message('take', { position, tiles, reveal: [[matching[0], this.tiles[matching[0]]], [matching[1], this.tiles[matching[1]]]] });
+        const reveal = matching.slice(0, 2).map(index => [index, this.tiles[index]]);
+        return new Message('take', { position, tiles, reveal });
     }
 
     exposedKong(position) {
@@ -306,7 +307,7 @@ export default class Schema {
         const hand = this[position].up;
         const discard = this.tiles[this.discarded];
 
-        const matching = hand.filter(tile => this.tiles[tile].suit === discard.suit && this.tiles[tile].value === discard.value);
+        const matching = hand.filter(tile => eq(this.tiles[tile], discard));
         if (matching.length < 3) {
             throw new Error('You must have three matching tiles to kong.');
         }
@@ -321,8 +322,34 @@ export default class Schema {
         this.drawn = this.walls[wall][stack].pop();
         this[position].up.push(this.drawn);
         delete this.discarded;
+        const reveal = matching.map(index => [index, this.tiles[index]]);
         return [
-            new Message('take', { position, tiles, wall, stack, reveal: [[matching[0], this.tiles[matching[0]]], [matching[1], this.tiles[matching[1]]], [matching[2], this.tiles[matching[2]]]] }),
+            new Message('take', { position, tiles, wall, stack, reveal }),
+            [this.drawn, this.tiles[this.drawn]],
+        ];
+    }
+
+    concealedKong(player, tile) {
+        const position = this.playerWind(player);
+        const tileInfo = this.tiles[tile];
+        const matching = this[position].up.filter(tile => eq(this.tiles[tile], tileInfo));
+        if (position !== this.turn) {
+            throw new Error('It is not your turn.');
+        }
+        if (matching.length !== 4) {
+            throw new Error('You must have four matching tiles to kong.');
+        }
+        for (const tile of matching) {
+            this[position].up.splice(this[position].up.indexOf(tile), 1);
+        }
+        const tiles = [...matching, 'concealed'];
+        this[position].down.push(tiles);
+        const [wall, stack] = this.reverseDraw();
+        this.drawn = this.walls[wall][stack].pop();
+        this[position].up.push(this.drawn);
+        const reveal = matching.map(index => [index, this.tiles[index]]);
+        return [
+            new Message('kong', { position, tiles, wall, stack, reveal }),
             [this.drawn, this.tiles[this.drawn]],
         ];
     }
@@ -349,7 +376,8 @@ export default class Schema {
         this.turn = position;
         this.drawn = this.discarded;
         delete this.discarded;
-        return new Message('take', { position, tiles, reveal: [[matching[0], this.tiles[matching[0]]], [matching[1], this.tiles[matching[1]]]] });
+        const reveal = matching.map(index => [index, this.tiles[index]]);
+        return new Message('take', { position, tiles, reveal });
     }
 
     eyes(position) {

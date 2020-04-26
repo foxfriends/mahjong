@@ -1,0 +1,31 @@
+<script>
+  import images from '../../tiles/Regular/*.svg';
+  import store from '../../game/store.js';
+
+  export let tile;
+
+  let style;
+  $: {
+    const info = $store.tiles[tile];
+    if (typeof info.value === 'number') {
+      style = `background-image: url(${images[info.suit+info.value]})`;
+    } else {
+      style = `background-image: url(${images[info.value]})`;
+    }
+  };
+</script>
+
+<span class="tile" {style} />
+
+<style>
+  .tile {
+    display: inline-block;
+    width: 23px;
+    height: 44px;
+    border-radius: 3px;
+    background-attachment: center center;
+    background-size: 20px 40px;
+    background-repeat: no-repeat;
+    background-color: white;
+  }
+</style>

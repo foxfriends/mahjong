@@ -1,4 +1,5 @@
 <script>
+  import TextTile from './TextTile.svelte';
   import Schema from '../../lib/schema.js';
   import store from '../../game/store.js';
   import selectionSets from '../../game/selectionSets.js';
@@ -14,6 +15,22 @@
     });
 
   $: myWind = $store && $store.playerWind(socket.name);
+  $: kongs = $store[myWind].up
+    .filter((tile, i, tiles) =>
+      tiles
+        .slice(i + 1)
+        .map(tile => $store.tiles[tile])
+        .filter(info => info.suit === $store.tiles[tile].suit && info.value === $store.tiles[tile].value)
+        .length === 3
+    );
+
+  async function kong(tile) {
+    try {
+      await socket.send('kong', { mode: 'concealed', tile });
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   async function win() {
     try {
@@ -31,10 +48,19 @@
         {action.label}
       </button>
     {/each}
+
     {#if $store && Schema.winningHand($store, $store[myWind]) && $store.turn === myWind}
       <button class="action" on:click={win}>
         Win
       </button>
+    {/if}
+
+    {#if $store && $store.drawn !== undefined && $store.turn === myWind}
+      {#each kongs as tile}
+        <button class="action" on:click={() => kong(tile)}>
+          Kong (<TextTile {tile} />)
+        </button>
+      {/each}
     {/if}
   </div>
 </div>
@@ -56,7 +82,7 @@
 
     display: flex;
     flex-direction: column;
-    width: 120px;
+    min-width: 120px;
     pointer-events: none;
   }
 
@@ -69,5 +95,9 @@
     pointer-events: auto;
     font-size: 18pt;
     cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    word-wrap: no-wrap;
   }
 </style>

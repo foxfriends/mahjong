@@ -66,11 +66,11 @@ export default async function handler(schema, socket) {
                 break;
             }
             case 'take': {
-                const { position, wall, stack, tiles, reveal } = message.body;
                 window.clearTimeout((get(timer) || {}).handle);
                 selectionSets.set([]);
                 selection.set(new Set);
                 timer.set(null);
+                const { position, wall, stack, tiles, reveal } = message.body;
                 schema[position].down.push(tiles);
                 schema[schema.previousTurn].discarded.pop();
                 for (const [index, tile] of reveal) {
@@ -88,6 +88,21 @@ export default async function handler(schema, socket) {
                 }
                 delete schema.discarded;
                 schema.turn = position;
+                store.set(schema);
+                break;
+            }
+            case 'kong': {
+                const { position, wall, stack, tiles, reveal } = message.body;
+                schema[position].down.push(tiles);
+                for (const [index, tile] of reveal) {
+                    schema.tiles[index] = tile;
+                }
+                for (const tile of tiles) {
+                    const index = schema[position].up.indexOf(tile);
+                    if (index !== -1) schema[position].up.splice(index, 1);
+                }
+                schema.drawn = schema.walls[wall][stack].pop();
+                schema[position].up.push(schema.drawn);
                 store.set(schema);
                 break;
             }
@@ -113,11 +128,11 @@ export default async function handler(schema, socket) {
                 break;
             }
             case 'win': {
-                const { position, tile, reveal } = message.body;
                 window.clearTimeout((get(timer) || {}).handle);
                 selectionSets.set([]);
                 selection.set(new Set);
                 timer.set(null);
+                const { position, tile, reveal } = message.body;
                 schema.completed = true;
                 if (tile !== undefined) {
                     schema[position].up.push(tile);
