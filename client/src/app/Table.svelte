@@ -1,6 +1,6 @@
 <script>
   export let angle = 0, rotation = 0, scrollable = false;
-
+  export let topLabel = '', leftLabel = '', rightLabel = '', bottomLabel = '';
 
   let adjustment = 0;
   $: displayAngle = Math.min(90, Math.max(0, angle + adjustment));
@@ -17,6 +17,18 @@
 
 <div class="world">
   <div class="table" style="transform: rotateX({displayAngle}deg) rotateZ({rotation}deg)">
+    {#if topLabel}
+      <div class="top-label">{topLabel}</div>
+    {/if}
+    {#if leftLabel}
+      <div class="left-label">{leftLabel}</div>
+    {/if}
+    {#if rightLabel}
+      <div class="right-label">{rightLabel}</div>
+    {/if}
+    {#if bottomLabel}
+      <div class="bottom-label">{bottomLabel}</div>
+    {/if}
     <div class="top-edge" />
     <div class="left-edge" />
     <div class="right-edge" />
@@ -80,9 +92,52 @@
   transform-origin: right;
   transform: rotateY(90deg);
 }
+
+.top-label, .bottom-label, .right-label, .left-label {
+  padding: 40px 0;
+  color: white;
+  font-size: 60pt;
+  font-family: var(--font-english);
+  text-align: center;
+}
+
 .right-edge {
   left: 100%;
   transform-origin: left;
   transform: rotateY(-90deg);
+}
+
+.left-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  transform-origin: bottom left;
+  transform: rotateZ(-90deg);
+}
+
+.right-label {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  transform-origin: top right;
+  transform: rotateZ(-90deg);
+}
+
+.top-label {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  width: 100%;
+}
+
+.bottom-label {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  transform-origin: center;
+  transform: rotateZ(180deg);
 }
 </style>
