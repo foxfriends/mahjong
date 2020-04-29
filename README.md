@@ -1,6 +1,6 @@
 # Mahjong
 
->   Work in progress: This game is not yet playable.
+>   Work in progress: This game is probably functional, but has not been thoroughly tested. Play at your own risk.
 
 Play Mahjong in your browser with your friends.
 
