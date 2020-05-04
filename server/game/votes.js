@@ -12,10 +12,23 @@ export default class Vote {
 }
 
 export function handle(socket, schema, votes) {
+    const turnPriority = schema.votePriority();
     const [action, winner] = WINDS
         .filter(wind => votes[wind])
         .map(wind => [votes[wind], wind])
-        .reduce((a, b) => a[0].priority > b[0].priority ? a : b);
+        .reduce((a, b) => {
+            if (a[0].priority > b[0].priority) {
+                return a;
+            }
+            if (b[0].priority > a[0].priority) {
+                return b;
+            }
+            if (turnPriority.indexOf(a[1]) < turnPriority.indexOf(b[1])) {
+                return a;
+            }
+            return b;
+        });
+
     switch (action.method) {
         case 'Draw': {
             const [message, reveal] = schema.draw(winner);
@@ -48,6 +61,9 @@ export function handle(socket, schema, votes) {
         }
         default:
             throw new Error(`Invalid method ${action.method}`);
+    }
+    if (action.win) {
+        socket.emit(schema.win(schema[winner].name));
     }
 }
 

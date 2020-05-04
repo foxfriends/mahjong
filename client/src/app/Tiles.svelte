@@ -91,100 +91,119 @@
   let selecting = false;
   $: {
     const list = [];
-    if (exactMatches.length === 2) {
-      list.push({
-        tiles: exactMatches,
-        label: 'Pong',
-        async handler() {
-          try {
-            await socket.send('pong');
-            selection.set(new Set);
-            selecting = false;
-          } catch (error) {
-            console.error(error);
-          }
-        },
-      });
-    } else if (exactMatches.length === 3) {
-      list.push(...[
-        [exactMatches[0], exactMatches[1]],
-        [exactMatches[1], exactMatches[2]],
-        [exactMatches[2], exactMatches[0]],
-      ].map(tiles => ({
-        tiles,
-        label: 'Pong',
-        async handler() {
-          try {
-            await socket.send('pong');
-            selection.set(new Set);
-            selecting = false;
-          } catch (error) {
-            console.error(error);
-          }
-        },
-      })));
-      list.push({
-        tiles: exactMatches,
-        label: 'Kong',
-        async handler() {
-          try {
-            await socket.send('kong', { mode: 'exposed' });
-            selection.set(new Set);
-            selecting = false;
-          } catch (error) {
-            console.error(error);
-          }
-        },
-      });
-    }
+    const store = $store;
+    if (myWind) {
+      const pongs = [];
+      if (exactMatches.length === 2) {
+        pongs.push(exactMatches);
+      } else if (exactMatches.length === 3) {
+        pongs.push(...[
+          [exactMatches[0], exactMatches[1]],
+          [exactMatches[1], exactMatches[2]],
+          [exactMatches[2], exactMatches[0]],
+        ]);
+        list.push({
+          tiles: exactMatches,
+          label: 'Kong',
+          async handler() {
+            try {
+              await socket.send('kong', { mode: 'exposed' });
+              selection.set(new Set);
+              selecting = false;
+            } catch (error) {
+              console.error(error);
+            }
+          },
+        });
+      }
 
-    if (myTurn) {
-      list.push(...canChow.map(tiles => ({
-        tiles,
-        label: 'Chow',
-        async handler() {
-          try {
-            await socket.send('chow', { tiles });
-            selection.set(new Set);
-            selecting = false;
-          } catch (error) {
-            console.error(error);
-          }
-        },
-      })));
-    }
+      for (const tiles of pongs) {
+        list.push({
+          tiles,
+          label: 'Pong',
+          async handler() {
+            try {
+              await socket.send('pong');
+              selection.set(new Set);
+              selecting = false;
+            } catch (error) {
+              console.error(error);
+            }
+          },
+        });
 
-    if (canWin) {
-      list.push({
-        tiles: exactMatches,
+        const player = { ...store[myWind] };
+        player.up = player.up.filter(tile => !tiles.includes(tile));
+        player.down = [...player.down, [...tiles, store.discarded]];
+        if (Schema.winningHand(store, player)) {
+          list.push({
+            tiles,
+            label: 'Win',
+            async handler() {
+              try {
+                await socket.send('win', { method: 'pong' });
+                selection.set(new Set);
+                selecting = false;
+              } catch (error) {
+                console.error(error);
+              }
+            },
+          });
+        }
+      }
+
+      if (myTurn) {
+        list.push(...canChow.map(tiles => ({
+          tiles,
+          label: 'Chow',
+          async handler() {
+            try {
+              await socket.send('chow', { tiles });
+              selection.set(new Set);
+              selecting = false;
+            } catch (error) {
+              console.error(error);
+            }
+          },
+        })));
+      }
+
+      if (canWin) {
+        list.push({
+          tiles: [exactMatches[0]],
+          label: 'Win',
+          async handler() {
+            try {
+              await socket.send('win', { method: 'Eyes' });
+              selection.set(new Set);
+              selecting = false;
+            } catch (error) {
+              console.error(error);
+            }
+          },
+        });
+      }
+
+      const willWin = tiles => {
+        const player = { ...store[myWind] };
+        player.up = player.up.filter(tile => !tiles.includes(tile));
+        player.down = [...player.down, [...tiles, store.discarded]];
+        return Schema.winningHand(store, player);
+      }
+      list.push(...canChow.filter(willWin).map(tiles => ({
+        tiles,
         label: 'Win',
         async handler() {
           try {
-            await socket.send('win', { method: 'Eyes' });
+            await socket.send('win', { method: 'Chow', tiles });
             selection.set(new Set);
             selecting = false;
           } catch (error) {
             console.error(error);
           }
         },
-      });
+      })));
     }
-
-    const willWin = () => false; // TODO
-    list.push(...canChow.filter(willWin).map(tiles => ({
-      tiles,
-      label: 'Win',
-      async handler() {
-        try {
-          await socket.send('win', { method: 'Chow', tiles });
-          selection.set(new Set);
-          selecting = false;
-        } catch (error) {
-          console.error(error);
-        }
-      },
-    })));
-
     selectionSets.set(list);
   }
 
@@ -232,31 +251,12 @@
           }
 
           if (index === store.discarded && !myDiscard) {
-            if (!canPong && !canKong && !canChow.length && canWin) {
-                return async () => {
-                  try {
-                    await socket.send('win', { method: 'Eyes' });
-                  } catch (error) {
-                    console.error(error);
-                  }
-                };
-            } else if (canPong && !canKong && !canChow.length && !canWin) {
+            console.log($selectionSets.length);
+            if ($selectionSets.length === 1) {
               return async () => {
-                try {
-                  await socket.send('pong');
-                } catch (error) {
-                  console.error(error);
-                }
+                await $selectionSets[0].handler();
               };
-            } else if (!canPong && !canKong && (canChow.length === 1 && myTurn) && !canWin) {
-              return async () => {
-                try {
-                  await socket.send('chow', { tiles: canChow[0] });
-                } catch (error) {
-                  console.error(error);
-                }
-              };
-            } else if ($selectionSets.length) {
+            } else if ($selectionSets.length > 1) {
               return async () => {
                 try {
                   if (selecting) {

@@ -426,7 +426,6 @@ export default class Schema {
         }
         const hand = this[position].up;
         for (const tile of matching) {
-            console.log(hand, tile);
             if (!hand.includes(tile)) {
                 throw new Error('You do not own these tiles.');
             }
@@ -495,6 +494,15 @@ export default class Schema {
     nextTurn() {
         this.previousTurn = this.turn;
         do { this.turn = NEXT_TURN[this.turn]; } while (!this[this.turn]);
+    }
+
+    votePriority() {
+        return [
+            this.turn,
+            NEXT_TURN[this.turn],
+            NEXT_TURN[NEXT_TURN[this.turn]],
+            NEXT_TURN[NEXT_TURN[NEXT_TURN[this.turn]]],
+        ];
     }
 
     nextDraw() {
