@@ -1,3 +1,12 @@
+<script context='module'>
+  const SIDE = {
+    Ton: 'bottom',
+    Shaa: 'top',
+    Nan: 'right',
+    Pei: 'left',
+  };
+</script>
+
 <script>
   import Table from './Table.svelte';
   import Title from './Title.svelte';
@@ -52,12 +61,13 @@
 <div class="layer full">
   <Table
     angle={state === PLAY ? 60 : 0}
-    rotation={$store ? ['Ton', 'Pei', 'Shaa', 'Nan'].indexOf($store.playerWind(name)) * 90 : 0}
+    rotation={$store ? ['Ton', 'Nan', 'Shaa', 'Pei'].indexOf($store.playerWind(name)) * 90 : 0}
     scrollable={state === PLAY}
     bottomLabel={$store && $store.Ton && $store.Ton.name}
     topLabel={$store && $store.Shaa && $store.Shaa.name}
     rightLabel={$store && $store.Nan && $store.Nan.name}
     leftLabel={$store && $store.Pei && $store.Pei.name}
+    highlightSide={SIDE[$store && $store.turn] || null}
     >
     <Tiles {socket} />
   </Table>

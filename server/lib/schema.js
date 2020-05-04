@@ -4,7 +4,7 @@ export const WINDS = ['Ton', 'Shaa', 'Pei', 'Nan'];
 const DRAGONS = ['Chun', 'Hatsu', 'Haku'];
 const SUITS = ['Pin', 'Sou', 'Man'];
 
-const NEXT_TURN = { Ton: 'Nan', Nan: 'Shaa', Shaa: 'Pei', Pei: 'Ton' };
+const NEXT_TURN = { Ton: 'Pei', Nan: 'Ton', Shaa: 'Nan', Pei: 'Shaa' };
 
 export function player(name) {
     return { name, up: [], down: [], discarded: [], ready: false };

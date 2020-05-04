@@ -1,6 +1,7 @@
 <script>
   export let angle = 0, rotation = 0, scrollable = false;
   export let topLabel = '', leftLabel = '', rightLabel = '', bottomLabel = '';
+  export let highlightSide = null;
 
   let adjustment = 0;
   $: displayAngle = Math.min(90, Math.max(0, angle + adjustment));
@@ -18,16 +19,16 @@
 <div class="world">
   <div class="table" style="transform: rotateX({displayAngle}deg) rotateZ({rotation}deg)">
     {#if topLabel}
-      <div class="top-label">{topLabel}</div>
+      <div class="top-label {highlightSide === 'top' ? 'highlight' : ''}">{topLabel}</div>
     {/if}
     {#if leftLabel}
-      <div class="left-label">{leftLabel}</div>
+      <div class="left-label {highlightSide === 'left' ? 'highlight' : ''}">{leftLabel}</div>
     {/if}
     {#if rightLabel}
-      <div class="right-label">{rightLabel}</div>
+      <div class="right-label {highlightSide === 'right' ? 'highlight' : ''}">{rightLabel}</div>
     {/if}
     {#if bottomLabel}
-      <div class="bottom-label">{bottomLabel}</div>
+      <div class="bottom-label {highlightSide === 'bottom' ? 'highlight' : ''}">{bottomLabel}</div>
     {/if}
     <div class="top-edge" />
     <div class="left-edge" />
@@ -118,11 +119,11 @@
 
 .right-label {
   position: absolute;
-  top: 0;
+  bottom: 0;
   right: 0;
   width: 100%;
-  transform-origin: top right;
-  transform: rotateZ(-90deg);
+  transform-origin: bottom right;
+  transform: rotateZ(90deg);
 }
 
 .top-label {
@@ -139,5 +140,9 @@
   width: 100%;
   transform-origin: center;
   transform: rotateZ(180deg);
+}
+
+.highlight {
+  text-decoration: underline;
 }
 </style>

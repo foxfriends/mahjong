@@ -58,8 +58,8 @@
         ];
       case 'Nan':
         return [
-          `translateX(${pct(100)})`,
-          'rotateZ(90deg)',
+          `translateY(${pct(100)})`,
+          'rotateZ(270deg)',
           `translate(${pct(50 - HAND_WIDTH / 2.0)}, ${HAND_INSET})`,
         ];
       case 'Shaa':
@@ -70,8 +70,8 @@
         ];
       case 'Pei':
         return [
-          `translateY(${pct(100)})`,
-          'rotateZ(270deg)',
+          `translateX(${pct(100)})`,
+          'rotateZ(90deg)',
           `translate(${pct(50 - HAND_WIDTH / 2.0)}, ${HAND_INSET})`,
         ];
     }
@@ -87,8 +87,8 @@
         ];
       case 'Nan':
         return [
-          `translateX(${pct(100)})`,
-          'rotateZ(90deg)',
+          `translateY(${pct(100)})`,
+          'rotateZ(270deg)',
           `translate(${pct(50 - (STACKS_WIDTH - 2 * TILE_WIDTH) / 2.0)}, ${DISCARD_INSET})`,
         ];
       case 'Shaa':
@@ -99,8 +99,8 @@
         ];
       case 'Pei':
         return [
-          `translateY(${pct(100)})`,
-          'rotateZ(270deg)',
+          `translateX(${pct(100)})`,
+          'rotateZ(90deg)',
           `translate(${pct(50 - (STACKS_WIDTH - 2 * TILE_WIDTH) / 2.0)}, ${DISCARD_INSET})`,
         ];
     }
