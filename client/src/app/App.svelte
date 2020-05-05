@@ -56,20 +56,31 @@
       state();
     }
   }
+
+  let adjustment = 0;
+  $: tableAngle = Math.min(90, Math.max(0, 60 + adjustment));
+  const SPEED = 3;
+  function scroll(event) {
+    if (state !== PLAY) return;
+    const direction = event.deltaY / Math.abs(event.deltaY);
+    if (tableAngle + direction * SPEED <= 90 && tableAngle + direction * SPEED >= 0) {
+      adjustment += direction * SPEED;
+    }
+  }
 </script>
 
+<svelte:window on:wheel={scroll} />
 <div class="layer full">
   <Table
-    angle={state === PLAY ? 60 : 0}
+    angle={state === PLAY ? tableAngle : 0}
     rotation={$store ? ['Ton', 'Nan', 'Shaa', 'Pei'].indexOf($store.playerWind(name)) * 90 : 0}
-    scrollable={state === PLAY}
     bottomLabel={$store && $store.Ton && $store.Ton.name}
     topLabel={$store && $store.Shaa && $store.Shaa.name}
     rightLabel={$store && $store.Nan && $store.Nan.name}
     leftLabel={$store && $store.Pei && $store.Pei.name}
     highlightSide={SIDE[$store && $store.turn] || null}
     >
-    <Tiles {socket} />
+    <Tiles {socket} {tableAngle} />
   </Table>
 </div>
 

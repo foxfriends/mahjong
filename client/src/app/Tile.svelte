@@ -113,6 +113,7 @@
   import { WINDS } from '../lib/schema.js';
   import images from '../tiles/Regular/*.svg';
   export let tile, index, clickable = false, selected = false;
+  export let tableAngle, socket;
   const dispatch = createEventDispatcher();
 
   let frontStyle;
@@ -127,6 +128,8 @@
       frontStyle = '';
     }
   };
+
+  $: myWind = $store && $store.playerWind(socket.name);
 
   function calcPosition(store) {
     for (const [wall, i] of store.walls.map((wall, i) => [wall, i])) {
@@ -156,7 +159,7 @@
         position.push(`translateX(${pct(horizontal)})`);
         if (store.completed && wind === store.turn) {
           // Reveal the winner's hand
-        } else {
+        } else if (tableAngle || wind !== myWind) {
           position.push(`translateZ(${pct((TILE_HEIGHT - TILE_DEPTH) / 2)})`);
           position.push(`rotateX(-90deg)`);
         }
@@ -201,7 +204,7 @@
   }
 
   let position;
-  $: position = calcPosition($store);
+  $: position = (tableAngle, calcPosition($store));
 </script>
 
 <div class="selection {selected ? 'selected' : ''}">
@@ -233,6 +236,8 @@
 
     --color-back: #ffad00;
     --color-side: #e89f05;
+    --color-front: #fcfcfc;
+    --color-front-front: #fefefe;
   }
 
   .selection {
@@ -262,11 +267,15 @@
     pointer-events: auto;
     --color-back: #8dc8e8;
     --color-side: #5c9eed;
+    --color-front: #f5f1c4;
+    --color-front-front: #f5f1c4;
   }
 
   .selection.selected .clickable {
     --color-back: #addc91;
     --color-side: #a1d884;
+    --color-front: #f5f1c4;
+    --color-front-front: #f5f1c4;
   }
 
   .image {
@@ -298,7 +307,7 @@
     box-sizing: border-box;
     padding: 5%;
     transform: translateZ(min(1.75vw, 1.75vh)) translateZ(-1px);
-    background-color: #fefefe;
+    background-color: var(--color-front-front);
   }
 
   .back {
@@ -312,7 +321,7 @@
     transform: rotateX(90deg);
 
     border-top: min(0.5vw, 0.5vh) solid var(--color-side);
-    background-color: #fcfcfc;
+    background-color: var(--color-front);
   }
 
   .left {
@@ -322,7 +331,7 @@
     transform: rotateY(-90deg);
 
     border-left: min(0.5vw, 0.5vh) solid var(--color-side);
-    background-color: #fcfcfc;
+    background-color: var(--color-front);
   }
 
   .right {
@@ -332,7 +341,7 @@
     transform: rotateY(90deg);
 
     border-right: min(0.5vw, 0.5vh) solid var(--color-side);
-    background-color: #fcfcfc;
+    background-color: var(--color-front);
   }
 
   .bottom {
@@ -342,6 +351,6 @@
     transform: rotateX(-90deg);
 
     border-bottom: min(0.5vw, 0.5vh) solid var(--color-side);
-    background-color: #fcfcfc;
+    background-color: var(--color-front);
   }
 </style>

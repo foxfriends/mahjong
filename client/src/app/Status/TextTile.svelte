@@ -23,7 +23,7 @@
     width: 23px;
     height: 44px;
     border-radius: 3px;
-    background-attachment: center center;
+    background-position: center;
     background-size: 20px 40px;
     background-repeat: no-repeat;
     background-color: white;

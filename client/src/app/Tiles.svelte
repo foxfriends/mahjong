@@ -8,6 +8,7 @@
   import selection from '../game/selection.js';
 
   export let socket;
+  export let tableAngle;
 
   let discarded;
   $: discarded = $store && $store.tiles[$store.discarded];
@@ -53,7 +54,7 @@
   let canMatchSelection;
   $: canMatchSelection = selectionSet => [...$selection].every(tile => selectionSet.tiles.includes(tile));
 
-  let canWin = false; // TODO: win condition
+  let canWin = false;
   $: {
     const store = $store;
     if (discarded) {
@@ -286,6 +287,6 @@
 
 {#if $store}
   {#each $store.tiles as tile, index}
-    <Tile {tile} {index} clickable={!!handlers[index]} on:click={handlers[index]} selected={$selection.has(index)} />
+    <Tile {tableAngle} {tile} {index} {socket} clickable={!!handlers[index]} on:click={handlers[index]} selected={$selection.has(index)} />
   {/each}
 {/if}

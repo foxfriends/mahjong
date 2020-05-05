@@ -2,6 +2,7 @@
   import ActionButtons from './ActionButtons.svelte';
   import PlayerList from './PlayerList.svelte';
   import ReadyButton from './ReadyButton.svelte';
+  import DiscardInfo from './DiscardInfo.svelte';
   import Timer from './Timer.svelte';
   import store from '../../game/store.js';
 
@@ -18,6 +19,9 @@
   <Timer />
   {#if !$store.completed}
     <ActionButtons {socket} />
+  {/if}
+  {#if $store.discarded !== undefined}
+    <DiscardInfo tile={$store.tiles[$store.discarded]} />
   {/if}
 {:else}
   <PlayerList order={ORDER[$store.playerWind(socket.name)]} />
