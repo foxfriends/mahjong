@@ -24,6 +24,24 @@ You can now visit `localhost:1234` in your browser to play. Enter your name, and
 players (up to 4) who enter the same game name will join that game. Once all players have pressed "Ready", the
 game will begin.
 
+## Developing
+
+Very similar to running, but run the client as `npm start` instead of building it:
+
+```bash
+# Compile the client
+cd client
+npm install
+npm start
+
+# Then run the server
+cd server
+npm install
+npm start
+```
+
+You'll have to restart the server manually when it changes, but the client will rebuild automatically.
+
 ## Configuration
 
 The port (`mahjong_port`) and save data directory (`mahjong_state`) can be changed by modifying the 
