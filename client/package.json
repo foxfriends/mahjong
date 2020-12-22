@@ -29,5 +29,6 @@
     "socket.io-client": "^2.3.0",
     "svelte": "^3.20.1"
   },
-  "browserslist": "last 1 chrome version, last 1 firefox version"
+  "browserslist": "last 1 chrome version, last 1 firefox version",
+  "dependencies": {}
 }

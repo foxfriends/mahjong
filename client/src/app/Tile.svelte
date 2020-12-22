@@ -109,12 +109,15 @@
 
 <script>
   import { createEventDispatcher } from 'svelte';
-  import store from '../game/store.js';
+  import context from '../game/context.js';
   import { WINDS } from '../lib/schema.js';
   import images from '../tiles/Regular/*.svg';
+
   export let tile, index, clickable = false, selected = false;
-  export let tableAngle, socket;
+  export let tableAngle;
+
   const dispatch = createEventDispatcher();
+  const { socket, store } = context();
 
   let frontStyle;
   $: {

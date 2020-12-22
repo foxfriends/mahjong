@@ -13,11 +13,14 @@
   import Tiles from './Tiles.svelte';
   import Status from './Status/Status.svelte';
   import handler from '../game/handler.js';
-  import store from '../game/store.js';
+  import context, { init } from '../game/context.js';
 
   export let socket;
-  let name, room;
 
+  init(socket);
+  const { store } = context();
+
+  let name, room;
   let errorMessage;
 
   const PLAY = Symbol();
@@ -28,7 +31,7 @@
 
     try {
       const { schema } = await socket.send('location', { room });
-      handler(schema, socket);
+      handler(schema, socket, store);
       state = PLAY;
     } catch (error) {
       console.log(error);
@@ -80,13 +83,13 @@
     leftLabel={$store && $store.Pei && $store.Pei.name}
     highlightSide={SIDE[$store && $store.turn] || null}
     >
-    <Tiles {socket} {tableAngle} />
+    <Tiles {tableAngle} />
   </Table>
 </div>
 
 {#if state === PLAY}
   <div class="layer">
-    <Status {socket} />
+    <Status />
   </div>
 {:else}
   <div class="layer full title">

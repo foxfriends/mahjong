@@ -1,5 +1,7 @@
 <script>
-  import store from '../../game/store.js';
+  import context from '../../game/context.js';
+
+  const { store } = context();
 
   const CHARACTER = {
     Pei: '北',

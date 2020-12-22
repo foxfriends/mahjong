@@ -1,6 +1,8 @@
 <script>
   import images from '../../tiles/Regular/*.svg';
-  import store from '../../game/store.js';
+  import context from '../../game/context.js';
+
+  const { store } = context();
 
   export let tile;
 

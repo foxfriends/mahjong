@@ -22,6 +22,9 @@ git submodule update
 ## Usage
 
 ```bash
+# Create a directory for the games to be saved to
+mkdir state
+
 # Compile the client
 cd client
 npm install

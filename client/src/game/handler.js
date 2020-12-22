@@ -1,12 +1,11 @@
 import Schema, { player } from '../lib/schema.js';
 import { get } from 'svelte/store';
-import store from './store.js';
 import timer from './timer.js';
 import selectionSets from './selectionSets.js';
 import selection from './selection.js';
 
 let currentVotes = {};
-export default async function handler(schema, socket) {
+export default async function handler(schema, socket, store) {
     store.set(new Schema(schema));
     for (;;) {
         const message = await socket.recv();

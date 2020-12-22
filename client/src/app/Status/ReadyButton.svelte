@@ -1,7 +1,7 @@
 <script>
-  import store from '../../game/store.js';
+  import context from '../../game/context.js';
 
-  export let socket;
+  const { socket, store } = context();
 
   async function toggleReady() {
     try {

@@ -2,13 +2,14 @@
   import { get } from 'svelte/store';
   import Tile from './Tile.svelte';
   import Schema from '../lib/schema.js';
-  import store from '../game/store.js';
+  import context from '../game/context.js';
   import timer from '../game/timer.js';
   import selectionSets from '../game/selectionSets.js';
   import selection from '../game/selection.js';
 
-  export let socket;
   export let tableAngle;
+
+  const { socket, store } = context();
 
   let discarded;
   $: discarded = $store && $store.tiles[$store.discarded];
@@ -287,6 +288,6 @@
 
 {#if $store}
   {#each $store.tiles as tile, index}
-    <Tile {tableAngle} {tile} {index} {socket} clickable={!!handlers[index]} on:click={handlers[index]} selected={$selection.has(index)} />
+    <Tile {tableAngle} {tile} {index} clickable={!!handlers[index]} on:click={handlers[index]} selected={$selection.has(index)} />
   {/each}
 {/if}

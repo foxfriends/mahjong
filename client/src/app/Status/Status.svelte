@@ -4,9 +4,10 @@
   import ReadyButton from './ReadyButton.svelte';
   import DiscardInfo from './DiscardInfo.svelte';
   import Timer from './Timer.svelte';
-  import store from '../../game/store.js';
+  import context from '../../game/context.js';
 
-  export let socket;
+  const { socket, store } = context();
+
   const ORDER = {
     Ton: ['Shaa', 'Nan', 'Pei', 'Ton'],
     Shaa: ['Ton', 'Pei', 'Nan', 'Shaa'],
@@ -18,13 +19,15 @@
 {#if $store.started}
   <Timer />
   {#if !$store.completed}
-    <ActionButtons {socket} />
+    <ActionButtons />
+  {:else}
+    <GameEnd />
   {/if}
   {#if $store.discarded !== undefined}
     <DiscardInfo tile={$store.tiles[$store.discarded]} />
   {/if}
 {:else}
   <PlayerList order={ORDER[$store.playerWind(socket.name)]} />
-  <ReadyButton {socket} />
+  <ReadyButton />
 {/if}
 
