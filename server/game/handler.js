@@ -28,10 +28,13 @@ export default (io, stateDirectory) => {
             await Fs.promises.access(path, Fs.constants.R_OK);
             data = JSON.parse(await Fs.promises.readFile(path));
         }
-        const schema = new Schema(data);
-        games.set(schema.name, schema);
-        playersInGame.set(schema, 0);
-        return schema;
+        if (!Array.isArray(data)) {
+            data = [data];
+        }
+        const schemas = data.map((data) => new Schema(data));
+        games.set(name, schemas);
+        playersInGame.set(schemas, 0);
+        return schemas;
     }
 
     async function identification(socket) {
@@ -62,9 +65,10 @@ export default (io, stateDirectory) => {
                 continue;
             }
 
-            let schema;
+            let schemas, schema;
             try {
-                schema = await loadSchema(room);
+                schemas = await loadSchema(room);
+                schema = schemas[schemas.length - 1];
             } catch (error) {
                 location.fail(error);
                 continue;
@@ -81,23 +85,24 @@ export default (io, stateDirectory) => {
                 }
             }
 
-            socket.join(schema.name);
-            playersInGame.set(schema, playersInGame.get(schema) + 1);
+            socket.join(room);
+            playersInGame.set(schemas, playersInGame.get(schemas) + 1);
             if (!schema.hasPlayer(name)) {
                 socket.broadcast(schema.addPlayer(name));
             }
 
             location.success({ schema: Schema.concealed(schema, name) });
-            return schema;
+            return [room, schemas];
         }
     }
 
     return async rawSocket => {
         const socket = new AsyncSocket(rawSocket, io);
-        let name, schema;
+        let name, room, schemas, schema;
         try {
             name = await identification(socket);
-            schema = await location(socket, name);
+            [room, schemas] = await location(socket, name);
+            schema = schemas[schemas.length - 1];
 
             for (;;) {
                 const message = await socket.recv();
@@ -120,16 +125,16 @@ export default (io, stateDirectory) => {
             if (name) {
                 sockets.delete(name);
             }
-            if (schema) {
-                playersInGame.set(schema, playersInGame.get(schema) - 1);
+            if (schemas) {
+                playersInGame.set(schemas, playersInGame.get(schemas) - 1);
                 if (!schema.started) {
                     socket.broadcast(schema.removePlayer(name));
                 }
-                if (playersInGame.get(schema) == 0) {
-                    games.delete(schema.name);
+                if (playersInGame.get(schemas) == 0) {
+                    games.delete(room);
                     if (schema.started) {
                         try {
-                            await Fs.promises.writeFile(filename(schema.name), JSON.stringify(schema));
+                            await Fs.promises.writeFile(filename(room), JSON.stringify(schemas));
                         } catch (error) {
                             console.error(error);
                         }

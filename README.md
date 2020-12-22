@@ -6,6 +6,19 @@ Play Mahjong in your browser with your friends.
 
 Please note this is the real Mahjong game, not the weird tile matching one. We don't play that one.
 
+## Installation
+
+This repository uses submodules. Clone using `--recursive` (or initialize submodules manually if
+it's already too late):
+
+```sh
+git clone --recursive git@github.com:foxfriends/mahjong
+
+# OR, after cloning normally
+git submodule init
+git submodule update
+```
+
 ## Usage
 
 ```bash
