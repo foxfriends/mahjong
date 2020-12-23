@@ -1,7 +1,13 @@
 <script>
   import context from '../../game/context';
+  import Schema from '../../lib/schema';
 
   const { store, socket } = context();
+
+  async function playAgain() {
+      const { schema } = await socket.send('playAgain');
+      $store = new Schema(schema);
+  }
 </script>
 
 <div class="container">
@@ -11,7 +17,11 @@
     Scores will be counted here... when I get around to building it!
   </div>
 
-  <button class="play-again">Play Again (does not work yet either)</button>
+  <button
+    class="play-again"
+    on:click={playAgain}>
+    Play Again
+  </button>
 </div>
 
 <style>

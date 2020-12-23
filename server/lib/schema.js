@@ -5,6 +5,7 @@ const DRAGONS = ['Chun', 'Hatsu', 'Haku'];
 const SUITS = ['Pin', 'Sou', 'Man'];
 
 const NEXT_TURN = { Ton: 'Pei', Nan: 'Ton', Shaa: 'Nan', Pei: 'Shaa' };
+const NEXT_WIND = { Ton: 'Nan', Nan: 'Shaa', Shaa: 'Pei', Pei: 'Ton' };
 
 export function player(name) {
     return { name, up: [], down: [], discarded: [], ready: false };
@@ -112,6 +113,38 @@ export default class Schema {
                 .map((tile, i) => revealed.includes(i) ? tile : null);
         }
         return schema;
+    }
+
+    static nextGame(previous, initial) {
+        const basis = {
+            name: previous.name,
+            wind: previous.wind,
+        };
+        if (previous.completed && previous.turn === 'Ton') {
+            for (const position of WINDS) {
+                if (previous[position]) {
+                    basis[position] = player(previous[position].name);
+                }
+            }
+        } else {
+            for (const position of WINDS) {
+                if (previous[position]) {
+                    let newPosition = position;
+                    do {
+                        newPosition = NEXT_TURN[newPosition];
+                    } while (!previous[newPosition]);
+                    basis[newPosition] = player(previous[position].name);
+                }
+            }
+            // After each position has been played by a player, change the prevailing
+            // wind and continue
+            if (basis.Ton.name === initial.Ton.name) {
+                // Technically if we have reached Ton again, then the game should be done..?
+                // I don't think that really matters to us though.
+                basis.wind = NEXT_WIND[basis.wind];
+            }
+        }
+        return new Schema(basis);
     }
 
     static winningHand(schema, player, eye = null) {
@@ -268,8 +301,9 @@ export default class Schema {
 
     removePlayer(name) {
         this.assertStarted(false);
-        const wind = this.playerWind(name);
-        delete this[wind];
+        const position = this.playerWind(name);
+        delete this[position];
+        return new Message('removePlayer', { position });
     }
 
     readyPlayer(name, ready = true) {

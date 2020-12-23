@@ -26,9 +26,11 @@ export default async function handler(schema, socket, store) {
                 break;
             }
             case 'readyPlayer': {
-                const { position, ready } = message.body;
-                schema[position].ready = ready;
-                store.set(schema);
+                if (!schema.started) {
+                    const { position, ready } = message.body;
+                    schema[position].ready = ready;
+                    store.set(schema);
+                }
                 break;
             }
             case 'start': {

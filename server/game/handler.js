@@ -75,7 +75,7 @@ export default (io, stateDirectory) => {
             }
 
             if (!schema.hasPlayer(name)) {
-                if (schema.started) {
+                if (schema.started || schemas.length > 1) {
                     location.fail(`The game ${room} has started without you.`);
                     continue;
                 }
@@ -102,15 +102,26 @@ export default (io, stateDirectory) => {
         try {
             name = await identification(socket);
             [room, schemas] = await location(socket, name);
-            schema = schemas[schemas.length - 1];
+            let n = schemas.length - 1;
+            schema = schemas[n];
 
             for (;;) {
                 const message = await socket.recv();
-                try {
-                    message.success(await handlers[message.subject](socket, schema, message.body || {}));
-                } catch (error) {
-                    console.error(error);
-                    message.fail(error.message);
+                if (schema.completed && message.subject === 'playAgain') {
+                    ++n;
+                    if (schemas.length === n) {
+                        schemas.push(Schema.nextGame(schema, schemas[0]));
+                    }
+                    schema = schemas[n];
+                    message.success({ schema: Schema.concealed(schema, name) });
+                    await handlers.ready(socket, schema, { ready: true });
+                } else {
+                    try {
+                        message.success(await handlers[message.subject](socket, schema, message.body || {}));
+                    } catch (error) {
+                        console.error(error);
+                        message.fail(error.message);
+                    }
                 }
             }
         } catch (error) {
@@ -119,7 +130,7 @@ export default (io, stateDirectory) => {
                     console.log(`${name} has left`);
                 }
             } else {
-                console.log(`Unexpected error: ${error}`);
+                console.error('Unexpected error:', error);
             }
         } finally {
             if (name) {
@@ -128,11 +139,15 @@ export default (io, stateDirectory) => {
             if (schemas) {
                 playersInGame.set(schemas, playersInGame.get(schemas) - 1);
                 if (!schema.started) {
-                    socket.broadcast(schema.removePlayer(name));
+                    if (schemas.length === 1) {
+                        socket.broadcast(schema.removePlayer(name));
+                    } else {
+                        await handlers.ready(socket, schema, { ready: false });
+                    }
                 }
                 if (playersInGame.get(schemas) == 0) {
                     games.delete(room);
-                    if (schema.started) {
+                    if (schema.started || schemas.length >= 1) {
                         try {
                             await Fs.promises.writeFile(filename(room), JSON.stringify(schemas));
                         } catch (error) {
