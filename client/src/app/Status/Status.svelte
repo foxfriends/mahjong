@@ -1,5 +1,6 @@
 <script>
   import ActionButtons from './ActionButtons.svelte';
+  import GameEnd from './GameEnd.svelte';
   import PlayerList from './PlayerList.svelte';
   import ReadyButton from './ReadyButton.svelte';
   import DiscardInfo from './DiscardInfo.svelte';
