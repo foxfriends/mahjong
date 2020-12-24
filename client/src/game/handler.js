@@ -1,12 +1,12 @@
 import Schema, { player } from '../lib/schema.js';
 import { get } from 'svelte/store';
 
-let currentVotes = {};
-export default async function handler(schema, { socket, store, timer, selection, selectionSets }) {
+const TIMER_DURATION = 4000;
+
+export default async function handler(schema, { socket, store, timer, selection, selectionSets, currentVotes }) {
     store.set(new Schema(schema));
     for (;;) {
         const message = await socket.recv();
-        console.log(message);
 
         const schema = new Schema(get(store));
         switch (message.subject) {
@@ -36,7 +36,7 @@ export default async function handler(schema, { socket, store, timer, selection,
             }
             case 'discard': {
                 const { position, tile, reveal } = message.body;
-                currentVotes = { [position]: { method: 'Discard', priority: 0 }};
+                currentVotes.set({ [position]: { method: 'Discard', priority: 0 }});
                 schema.tiles[tile] = reveal;
                 const index = schema[position].up.indexOf(tile);
                 schema[position].up.splice(index, 1);
@@ -110,21 +110,22 @@ export default async function handler(schema, { socket, store, timer, selection,
             }
             case 'vote': {
                 const { position, vote } = message.body;
-                currentVotes[position] = vote;
+                currentVotes.update((votes) => ({ ...votes, [position]: vote }));
                 if (!get(timer)) {
                     const myWind = schema.playerWind(socket.name);
                     timer.set({
-                        start: (new Date).getTime(),
-                        duration: 3000,
+                        start: Date.now(),
+                        paused: false,
+                        duration: TIMER_DURATION,
                         handle: window.setTimeout(async () => {
-                            if (currentVotes[myWind]) return; // don't bother voting again
+                            if (get(currentVotes)[myWind]) return; // don't bother voting again
                             try {
                                 await socket.send('ignore');
                                 timer.set(null);
                             } catch (error) {
                                 console.error(error);
                             }
-                        }, 3000),
+                        }, TIMER_DURATION),
                     });
                 }
                 break;

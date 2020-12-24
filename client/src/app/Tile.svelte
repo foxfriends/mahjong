@@ -160,9 +160,8 @@
         const horizontal = i * TILE_WIDTH;
         position.push(`translateX(${i * 3}px)`);
         position.push(`translateX(${pct(horizontal)})`);
-        if (store.completed && wind === store.turn) {
-          // Reveal the winner's hand
-        } else if (tableAngle || wind !== myWind) {
+        if (!store.completed && (tableAngle || wind !== myWind)) {
+          // skip this if the game is over, so we can see all hands
           position.push(`translateZ(${pct((TILE_HEIGHT - TILE_DEPTH) / 2)})`);
           position.push(`rotateX(-90deg)`);
         }

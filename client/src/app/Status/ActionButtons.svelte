@@ -3,7 +3,7 @@
   import Schema, { eq } from '../../lib/schema.js';
   import context from '../../game/context.js';
 
-  const { selection, selectionSets, socket, store } = context();
+  const { selection, selectionSets, socket, store, hasAction, timer } = context();
 
   let actions = []
   $: actions = $selectionSets
@@ -31,6 +31,18 @@
         )
     );
 
+  function wait() {
+    $timer.paused = Date.now();
+    if ($timer.handle) {
+      window.clearTimeout($timer.handle);
+      $timer.handle = false;
+    }
+  }
+
+  async function cancel() {
+    await socket.send('ignore');
+  }
+
   async function kong(mode, tile) {
     try {
       await socket.send('kong', { mode, tile });
@@ -50,6 +62,18 @@
 
 <div class="container">
   <div class="actions">
+    {#if $hasAction && $timer}
+      {#if $timer.paused}
+        <button class="action" on:click={cancel}>
+          Cancel Wait
+        </button>
+      {:else}
+        <button class="action" on:click={wait}>
+          Wait
+        </button>
+      {/if}
+    {/if}
+    
     {#each actions as action}
       <button class="action" on:click={action.handler}>
         {action.label}

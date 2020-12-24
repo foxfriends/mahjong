@@ -10,6 +10,8 @@ export function init(socket) {
     timer: writable(null),
     selection: writable(new Set()),
     selectionSets: writable([]),
+    currentVotes: writable({}),
+    hasAction: writable(false),
   });
 
   window.schema = () => get(store);

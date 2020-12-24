@@ -1,9 +1,9 @@
 <script context="module">
   import { readable } from 'svelte/store';
 
-  const time = readable((new Date).getTime(), (set) => {
+  const time = readable(Date.now(), (set) => {
     function update() {
-      set((new Date).getTime());
+      set(Date.now());
       window.requestAnimationFrame(update);
     }
     window.requestAnimationFrame(update);
@@ -17,7 +17,10 @@
 </script>
 
 {#if $timer}
-  <div class="timer" style='width: {Math.min(100, ($time - $timer.start) / $timer.duration * 100)}vw;' />
+  <div
+    class="timer"
+    class:paused={$timer.paused}
+    style='width: {Math.min(100, (($timer.paused || $time) - $timer.start) / $timer.duration * 100)}vw;' />
 {/if}
 
 <style>
@@ -28,5 +31,9 @@
     height: 16px;
     background-color: #89abe3;
     pointer-events: none;
+  }
+
+  .timer.paused {
+    background-color: #7bc77e;
   }
 </style>

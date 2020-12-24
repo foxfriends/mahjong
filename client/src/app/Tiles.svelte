@@ -6,7 +6,7 @@
 
   export let tableAngle;
 
-  const { selection, selectionSets, socket, store, timer } = context();
+  const { selection, selectionSets, socket, store, timer, hasAction } = context();
 
   let discarded;
   $: discarded = $store && $store.tiles[$store.discarded];
@@ -16,6 +16,7 @@
 
   let myTurn;
   $: myTurn = $store && $store.turn === myWind;
+
   let myDiscard;
   $: myDiscard = $store && $store.previousTurn === myWind;
 
@@ -34,18 +35,12 @@
   }
 
   let exactMatches = [];
-  let canPong = false;
-  let canKong = false;
   $: {
     const store = $store;
     if (discarded) {
       exactMatches = store[myWind].up.filter(tile => store.tiles[tile].suit === discarded.suit && store.tiles[tile].value === discarded.value);
-      canPong = exactMatches.length >= 2;
-      canKong = exactMatches.length >= 3;
     } else {
       exactMatches = [];
-      canPong = false;
-      canKong = false;
     }
   };
 
@@ -215,7 +210,6 @@
       } else {
         handlers = store.tiles.map((tile, index) => {
           if (myTurn) {
-            // My turn
             if (typeof store.drawn === 'number') {
               if (store[store.turn].up.includes(index)) {
                 return async () => {
@@ -250,7 +244,6 @@
           }
 
           if (index === store.discarded && !myDiscard) {
-            console.log($selectionSets.length);
             if ($selectionSets.length === 1) {
               return async () => {
                 await $selectionSets[0].handler();
@@ -281,6 +274,8 @@
       }
     }
   }
+
+  $: $hasAction = !myTurn && $selectionSets.length;
 </script>
 
 {#if $store}
