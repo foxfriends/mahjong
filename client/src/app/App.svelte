@@ -18,7 +18,8 @@
   export let socket;
 
   init(socket);
-  const { store } = context();
+  const ctx = context();
+  const { store } = ctx;
 
   let name, room;
   let errorMessage;
@@ -31,7 +32,7 @@
 
     try {
       const { schema } = await socket.send('location', { room });
-      handler(schema, socket, store);
+      handler(schema, ctx);
       state = PLAY;
     } catch (error) {
       console.log(error);

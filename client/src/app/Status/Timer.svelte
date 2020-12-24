@@ -1,5 +1,6 @@
 <script context="module">
   import { readable } from 'svelte/store';
+
   const time = readable((new Date).getTime(), (set) => {
     function update() {
       set((new Date).getTime());
@@ -10,7 +11,9 @@
 </script>
 
 <script>
-  import timer from '../../game/timer.js';
+  import context from '../../game/context.js';
+
+  const { timer } = context();
 </script>
 
 {#if $timer}

@@ -3,13 +3,10 @@
   import Tile from './Tile.svelte';
   import Schema from '../lib/schema.js';
   import context from '../game/context.js';
-  import timer from '../game/timer.js';
-  import selectionSets from '../game/selectionSets.js';
-  import selection from '../game/selection.js';
 
   export let tableAngle;
 
-  const { socket, store } = context();
+  const { selection, selectionSets, socket, store, timer } = context();
 
   let discarded;
   $: discarded = $store && $store.tiles[$store.discarded];

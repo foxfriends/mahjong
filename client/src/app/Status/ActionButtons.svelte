@@ -2,10 +2,8 @@
   import TextTile from './TextTile.svelte';
   import Schema, { eq } from '../../lib/schema.js';
   import context from '../../game/context.js';
-  import selectionSets from '../../game/selectionSets.js';
-  import selection from '../../game/selection.js';
 
-  const { socket, store } = context();
+  const { selection, selectionSets, socket, store } = context();
 
   let actions = []
   $: actions = $selectionSets

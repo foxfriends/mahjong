@@ -7,6 +7,9 @@ export function init(socket) {
   setContext(CONTEXT, {
     socket,
     store: writable(null),
+    timer: writable(null),
+    selection: writable(new Set()),
+    selectionSets: writable([]),
   });
 
   window.schema = () => get(store);
