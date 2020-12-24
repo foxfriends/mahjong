@@ -88,6 +88,27 @@
   text-align: center;
 }
 
+.top-label::before, .bottom-label::before, .right-label::before, .left-label::before {
+  font-family: var(--font-chinese);
+  margin-right: 40px;
+}
+
+.bottom-label::before {
+  content: '东';
+}
+
+.top-label::before {
+  content: '西';
+}
+
+.right-label::before {
+  content: '南';
+}
+
+.left-label::before {
+  content: '北';
+}
+
 .right-edge {
   left: 100%;
   transform-origin: left;
