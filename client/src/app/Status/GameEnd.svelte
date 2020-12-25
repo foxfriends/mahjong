@@ -14,10 +14,14 @@
     if (typeof lhs.suit === 'symbol') {
       if (!ctx[lhs.suit]) ctx[lhs.suit] = rhs.suit;
       lhs.suit = ctx[lhs.suit];
+    } else if (typeof lhs.suit === 'undefined') {
+      delete rhs.suit;
     }
     if (typeof lhs.value === 'symbol') {
       if (!ctx[lhs.value]) ctx[lhs.value] = rhs.value;
       lhs.value = ctx[lhs.value];
+    } else if (typeof lhs.value === 'undefined') {
+      delete rhs.value;
     }
     return lhs.suit === rhs.suit && lhs.value === rhs.value;
   };
@@ -37,6 +41,9 @@
 
   const tiles = (suit, ...values) => values.map(value => ({ suit, value }));
   const pong = (suit, value) => tiles(suit, value, value, value);
+
+  const ch = (i) => ['一', '二', '三', '四', '五', '六', '七', '八', '九'][i];
+  const ro = (i) => ['Ya', 'E', 'San', 'Sei', 'M', '6', 'Tsut', 'Ba', '9'][i];
 
   // TODO: Will this be sufficient, or will going all Prolog be easier?
   $: awards = {
@@ -104,12 +111,12 @@
       '平糊': {
         romanized: 'Ping Wu',
         description: 'All chows',
-        matched: false, // TODO: this one is more difficult than a simple `includes`
+        matched: false, // TODO: better matching
       },
       '爵': {
         romanized: 'Tsern',
         description: 'Pair of eyes (2, 5, 8)',
-        matched: false, // TODO: need to figure out which one is the pair, and not part of a meld
+        matched: false, // TODO: better matching
       },
       '自摸': {
         romanized: 'Tsi Mo',
@@ -136,7 +143,7 @@
       '混优': {
         romanized: 'Wan Yu',
         description: 'All ends with winds',
-        matched: false, // TODO: write a function..?
+        matched: false, // TODO: better matching
       },
       '一班高': {
         romanized: 'Ye Ban Go',
@@ -153,7 +160,7 @@
       '雞糊': {
         romanized: 'Gai Wu',
         description: 'Chicken hand, zero fans',
-        matched: false, // TODO: this rule depends on all the other ones, maybe it can be special casedd
+        matched: false, // TODO: this rule depends on all the other ones, maybe it can be special cased
       },
       '五门齐': {
         romanized: 'M Mun Tsai',
@@ -224,11 +231,11 @@
         description: 'All one numerical suit',
         matched: winningSuits.size === 1 && !winningSuits.has('wind') && !winningSuits.has('dragon'),
       },
-      '全带__': {
-        romanized: 'Tsun Dai ___',
-        description: 'All one number (___ meaning number being any number 1-9)',
-        matched: false, // TODO: easy, but we need all the numbers in separate rules
-      },
+      ...Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8, 9].map(value => [`全带${ch(value)}`, {
+        romanized: `Tsun Dai ${ro(value)}`,
+        description: `All ${value}`,
+        matched: includes(tiles(undefined, value, value, value, value, value, value, value, value, value, value, value, value, value, value, value)),
+      }])),
     },
     'Maximum': { // TODO: what does "Maximum" mean, numerically?
       '全绿': {
@@ -253,7 +260,7 @@
       },
       '十三不答': {
         romanized: 'Sap Sam Ba Da',
-        description: 'Start the hand with zero connections, first car played cannot connect to anything in the hand',
+        description: 'Start the hand with zero connections, first card played cannot connect to anything in the hand',
         matched: false, // TODO: special case
       },
       '十三大优': {
