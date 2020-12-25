@@ -4,8 +4,7 @@ export const WINDS = ['Ton', 'Shaa', 'Pei', 'Nan'];
 const DRAGONS = ['Chun', 'Hatsu', 'Haku'];
 const SUITS = ['Pin', 'Sou', 'Man'];
 
-const NEXT_TURN = { Ton: 'Pei', Nan: 'Ton', Shaa: 'Nan', Pei: 'Shaa' };
-const NEXT_WIND = { Ton: 'Nan', Nan: 'Shaa', Shaa: 'Pei', Pei: 'Ton' };
+const NEXT_TURN = { Ton: 'Nan', Nan: 'Shaa', Shaa: 'Pei', Pei: 'Ton' };
 
 export function player(name) {
     return { name, up: [], down: [], discarded: [], ready: false };
@@ -141,7 +140,7 @@ export default class Schema {
             if (basis.Ton.name === initial.Ton.name) {
                 // Technically if we have reached Ton again, then the game should be done..?
                 // I don't think that really matters to us though.
-                basis.wind = NEXT_WIND[basis.wind];
+                basis.wind = NEXT_TURN[basis.wind];
             }
         }
         return new Schema(basis);
