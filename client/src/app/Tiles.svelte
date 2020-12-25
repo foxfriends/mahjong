@@ -135,7 +135,7 @@
             label: 'Win',
             async handler() {
               try {
-                await socket.send('win', { method: 'pong' });
+                await socket.send('win', { method: 'Pong' });
                 selection.set(new Set);
                 selecting = false;
               } catch (error) {

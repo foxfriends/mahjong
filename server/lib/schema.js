@@ -221,6 +221,7 @@ export default class Schema {
         this.completed = basis.completed || false;
         this.roll = basis.roll;
         this.drawn = basis.drawn;
+        this.source = basis.source;
         this.discarded = basis.discarded;
 
         this.tiles = basis.tiles || shuffle([...tiles()]);
@@ -284,6 +285,7 @@ export default class Schema {
 
         const draw = this.walls[wall][stack].pop();
         this.drawn = draw;
+        this.source = 'front';
         this[winds[0]].up.push(draw);
     }
 
@@ -333,6 +335,7 @@ export default class Schema {
         const [wall, stack] = this.nextDraw();
         const tile = this.walls[wall][stack].pop();
         this.drawn = tile;
+        this.source = 'front';
         delete this.discarded;
         this[position].up.push(tile);
         return [
@@ -359,6 +362,7 @@ export default class Schema {
         this[this.previousTurn].discarded.pop();
         this.turn = position;
         this.drawn = this.discarded;
+        this.source = 'discard';
         delete this.discarded;
         const reveal = matching.slice(0, 2).map(index => [index, this.tiles[index]]);
         return new Message('take', { position, tiles, reveal });
@@ -384,6 +388,7 @@ export default class Schema {
         this.turn = position;
         const [wall, stack] = this.reverseDraw();
         this.drawn = this.walls[wall][stack].pop();
+        this.source = 'back';
         this[position].up.push(this.drawn);
         delete this.discarded;
         const reveal = matching.map(index => [index, this.tiles[index]]);
@@ -410,6 +415,7 @@ export default class Schema {
         this[position].down.push(tiles);
         const [wall, stack] = this.reverseDraw();
         this.drawn = this.walls[wall][stack].pop();
+        this.source = 'back';
         this[position].up.push(this.drawn);
         const reveal = matching.map(index => [index, this.tiles[index]]);
         return [
@@ -440,6 +446,7 @@ export default class Schema {
 
         const [wall, stack] = this.reverseDraw();
         this.drawn = this.walls[wall][stack].pop();
+        this.source = 'back';
         this[position].up.push(this.drawn);
 
         const reveal = [[tile, tileInfo]];
@@ -469,6 +476,7 @@ export default class Schema {
         this[this.previousTurn].discarded.pop();
         this.turn = position;
         this.drawn = this.discarded;
+        this.source = 'discard';
         delete this.discarded;
         const reveal = matching.map(index => [index, this.tiles[index]]);
         return new Message('take', { position, tiles, reveal });
@@ -485,14 +493,17 @@ export default class Schema {
             throw new Error('You may not pick up eyes if it does not win the game');
         }
         const tile = this.discarded;
-
+        const i = this[position].up.findIndex(tile => eq(this.tiles[tile], discard));
+        const [leftEye] = this[position].up.splice(i, 1);
+  
         this[this.previousTurn].discarded.pop();
-        this[position].up.push(this.discarded);
+        this[position].down.push([leftEye, this.discarded]);
         this.drawn = this.discarded;
+        this.source = 'discard';
         this.turn = position;
         delete this.discarded;
         this.completed = true;
-        return new Message('win', { position, tile, reveal: this.tiles });
+        return new Message('win', { position, eyes: [leftEye, this.discarded], reveal: this.tiles });
     }
 
     win(player) {

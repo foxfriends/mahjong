@@ -59,6 +59,7 @@ export default async function handler(schema, { socket, store, timer, selection,
                 schema.walls[wall][stack].pop();
                 schema[schema.turn].up.push(tile);
                 schema.drawn = tile;
+                schema.source = 'front';
                 delete schema.discarded;
                 store.set(schema);
                 break;
@@ -81,8 +82,10 @@ export default async function handler(schema, { socket, store, timer, selection,
                 if (wall !== undefined && stack !== undefined) {
                     schema.drawn = schema.walls[wall][stack].pop();
                     schema[position].up.push(schema.drawn);
+                    schema.source = 'back';
                 } else {
                     schema.drawn = schema.discarded;
+                    schema.source = 'discard';
                 }
                 delete schema.discarded;
                 schema.turn = position;
@@ -104,6 +107,7 @@ export default async function handler(schema, { socket, store, timer, selection,
                     if (index !== -1) schema[position].up.splice(index, 1);
                 }
                 schema.drawn = schema.walls[wall][stack].pop();
+                schema.source = 'back';
                 schema[position].up.push(schema.drawn);
                 store.set(schema);
                 break;
@@ -135,15 +139,20 @@ export default async function handler(schema, { socket, store, timer, selection,
                 selectionSets.set([]);
                 selection.set(new Set);
                 timer.set(null);
-                const { position, tile, reveal } = message.body;
-                schema.completed = true;
-                if (tile !== undefined) {
-                    schema[position].up.push(tile);
-                    schema[schema.previousTurn].discarded.pop();
-                }
-                delete schema.discarded;
+                const { position, eyes, reveal } = message.body;
                 schema.turn = position;
                 schema.tiles = reveal;
+                schema.completed = true;
+                if (eyes !== undefined) {
+                    for (const tile of eyes) {
+                        const index = schema[position].up.indexOf(tile);
+                        if (index !== -1) schema[position].up.splice(index, 1);
+                    }
+                    schema[position].down.push(eyes);
+                    schema[schema.previousTurn].discarded.pop();
+                    schema.source = 'discard';
+                }
+                delete schema.discarded;
                 store.set(schema);
                 break;
             }

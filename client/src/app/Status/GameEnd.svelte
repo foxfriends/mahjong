@@ -5,17 +5,19 @@
   const { store, socket } = context();
 
   $: winner = $store[$store.turn];
-  $: winningHand = [...winner.up, ...winner.down.flat()].map(tile => $store.tiles[tile]);
+  $: winningHand = [...winner.up, ...winner.down.flat()]
+    .filter(tile => typeof tile === 'number')
+    .map(tile => $store.tiles[tile]);
   $: winningSuits = new Set(winningHand.map(tile => tile.suit));
 
   const eq = ({ ...lhs }, { ...rhs }, ctx = {}) => {
     if (typeof lhs.suit === 'symbol') {
       if (!ctx[lhs.suit]) ctx[lhs.suit] = rhs.suit;
-      lhs.suit === ctx[lhs.suit];
+      lhs.suit = ctx[lhs.suit];
     }
     if (typeof lhs.value === 'symbol') {
       if (!ctx[lhs.value]) ctx[lhs.value] = rhs.value;
-      lhs.value === ctx[lhs.value];
+      lhs.value = ctx[lhs.value];
     }
     return lhs.suit === rhs.suit && lhs.value === rhs.value;
   };
@@ -62,7 +64,7 @@
       '槓上花': {
         romanized: 'Gong Tsern Fa',
         description: 'Win off gong (pick up gong, win off of card picked up as a result of gong)',
-        matched: false, // TODO: need to know the source of the tile
+        matched: $store.source === 'back',
       },
       '紅中': {
         romanized: 'Hong Tsong',
@@ -97,7 +99,7 @@
       '門前清': {
         romanized: 'Mun Tsing Tsing',
         description: 'All inside but win off of a played card',
-        matched: false, // TODO: need to know the source of the tile
+        matched: winner.down.length === 1 && $store.source === 'discard',
       },
       '平糊': {
         romanized: 'Ping Wu',
@@ -112,7 +114,7 @@
       '自摸': {
         romanized: 'Tsi Mo',
         description: 'Self touch',
-        matched: false, // TODO: need to know the source of the tile
+        matched: $store.source !== 'discard',
       },
       '姐妹': {
         romanized: 'Tsi Mui',
