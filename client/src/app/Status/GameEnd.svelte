@@ -106,7 +106,7 @@
       '門前清': {
         romanized: 'Mun Tsing Tsing',
         description: 'All inside but win off of a played card',
-        matched: winner.down.length === 1 && $store.source === 'discard',
+        matched: winner.down.length === 1 && ($store.source === 'discard' || $store.source === 'kong'),
       },
       '平糊': {
         romanized: 'Ping Wu',
@@ -121,7 +121,7 @@
       '自摸': {
         romanized: 'Tsi Mo',
         description: 'Self touch',
-        matched: $store.source !== 'discard',
+        matched: $store.source === 'front' || $store.source === 'back',
       },
       '姐妹': {
         romanized: 'Tsi Mui',
@@ -136,7 +136,7 @@
       '搶槓': {
         romanized: 'Tsurng Gong',
         description: 'Steal from another person\'s gong to win',
-        matched: false, // TODO: this will require tracking much more information
+        matched: $store.source === 'kong',
       },
       '一条龙': {
         romanized: 'Ya Tiu Long',
@@ -170,7 +170,10 @@
       '雞糊': {
         romanized: 'Gai Wu',
         description: 'Chicken hand, zero fans',
-        matched: false, // TODO: this rule depends on all the other ones, maybe it can be special cased
+        matched: () => Object.values(awards)
+          .flatMap(rules => Object.values(rules))
+          .filter(rule => typeof rule !== 'function')
+          .reduce(async (first, next) => (await first) && !(await next), Promise.resolve(true)),
       },
       '五门齐': {
         romanized: 'M Mun Tsai',
@@ -312,6 +315,11 @@
     const { schema } = await socket.send('playAgain');
     $store = new Schema(schema);
   }
+
+  function check(value) {
+    if (typeof value === 'function') return value();
+    return value;
+  }
 </script>
 
 <div class="container">
@@ -325,11 +333,13 @@
   <div class="scores">
     {#each Object.entries(awards) as [fan, rules]}
       {#each Object.entries(rules) as [name, { romanized, description, matched }]}
-        {#if matched}
-          <div class='rule'>
-            {name} ({romanized}: {description}): {fan} 番
-          </div>
-        {/if}
+        {#await check(matched) then matched}
+          {#if matched}
+            <div class='rule'>
+              {name} ({romanized}: {description}): {fan} 番
+            </div>
+          {/if}
+        {/await}
       {/each}
     {/each}
   </div>

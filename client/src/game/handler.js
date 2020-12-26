@@ -139,7 +139,7 @@ export default async function handler(schema, { socket, store, timer, selection,
                 selectionSets.set([]);
                 selection.set(new Set);
                 timer.set(null);
-                const { position, eyes, reveal } = message.body;
+                const { position, eyes, reveal, kong } = message.body;
                 schema.turn = position;
                 schema.tiles = reveal;
                 schema.completed = true;
@@ -151,6 +151,9 @@ export default async function handler(schema, { socket, store, timer, selection,
                     schema[position].down.push(eyes);
                     schema[schema.previousTurn].discarded.pop();
                     schema.source = 'discard';
+                }
+                if (kong) {
+                    schema.source = 'kong';
                 }
                 delete schema.discarded;
                 store.set(schema);

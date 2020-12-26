@@ -482,7 +482,7 @@ export default class Schema {
         return new Message('take', { position, tiles, reveal });
     }
 
-    eyes(position) {
+    eyes(position, kong) {
         if (position === this.previousTurn) {
             throw new Error('You may not pick up your own discard.');
         }
@@ -495,7 +495,7 @@ export default class Schema {
         const tile = this.discarded;
         const i = this[position].up.findIndex(tile => eq(this.tiles[tile], discard));
         const [leftEye] = this[position].up.splice(i, 1);
-  
+
         this[this.previousTurn].discarded.pop();
         this[position].down.push([leftEye, this.discarded]);
         this.drawn = this.discarded;
@@ -503,10 +503,14 @@ export default class Schema {
         this.turn = position;
         delete this.discarded;
         this.completed = true;
-        return new Message('win', { position, eyes: [leftEye, this.discarded], reveal: this.tiles });
+        if (kong) {
+            // stealing someone's kong to win is worth points, so we have to watch for it specifically
+            this.source = 'kong';
+        }
+        return new Message('win', { position, eyes: [leftEye, this.discarded], reveal: this.tiles, kong });
     }
 
-    win(player) {
+    win(player, kong = false) {
         const position = this.playerWind(player);
         if (position !== this.turn) {
             throw new Error('You can only win on your own turn.');
@@ -515,7 +519,11 @@ export default class Schema {
             throw new Error('You do not have a valid winning hand');
         }
         this.completed = true;
-        return new Message('win', { position, reveal: this.tiles });
+        if (kong) {
+            // stealing someone's kong to win is worth points, so we have to watch for it specifically
+            this.source = 'kong';
+        }
+        return new Message('win', { position, reveal: this.tiles, kong });
     }
 
     discard(name, tile) {

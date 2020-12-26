@@ -29,6 +29,10 @@ export function handle(socket, schema, votes) {
             return b;
         });
 
+    const kong = !!Object
+      .values(votes)
+      .find(vote => vote.method === 'Kong');
+
     switch (action.method) {
         case 'Draw': {
             const [message, reveal] = schema.draw(winner);
@@ -55,7 +59,7 @@ export function handle(socket, schema, votes) {
             break;
         }
         case 'Eyes': {
-            const message = schema.eyes(winner);
+            const message = schema.eyes(winner, kong);
             socket.emit(message);
             break;
         }
@@ -63,7 +67,7 @@ export function handle(socket, schema, votes) {
             throw new Error(`Invalid method ${action.method}`);
     }
     if (action.win) {
-        socket.emit(schema.win(schema[winner].name));
+        socket.emit(schema.win(schema[winner].name, kong));
     }
 }
 
