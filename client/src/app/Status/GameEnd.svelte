@@ -43,7 +43,7 @@
   const pong = (suit, value) => tiles(suit, value, value, value);
 
   const ch = (i) => ['一', '二', '三', '四', '五', '六', '七', '八', '九'][i];
-  const ro = (i) => ['Ya', 'E', 'San', 'Sei', 'M', '6', 'Tsut', 'Ba', '9'][i];
+  const ro = (i) => ['Ya', 'E', 'Sam', 'Sei', 'M', 'Lok', 'Tsut', 'Ba', 'Gao'][i];
 
   // TODO: Will this be sufficient, or will going all Prolog be easier?
   $: awards = {
@@ -138,6 +138,11 @@
         description: 'Steal from another person\'s gong to win',
         matched: false, // TODO: this will require tracking much more information
       },
+      '一条龙': {
+        romanized: 'Ya Tiu Long',
+        description: 'Dragon (2 suits)',
+        matched: false, // TODO: better matching
+      },
     },
     2: {
       '混优': {
@@ -147,7 +152,12 @@
       },
       '一班高': {
         romanized: 'Ye Ban Go',
-        description: 'Two chows of the same suit',
+        description: 'Two of the same chow, in the same suit',
+        matched: false, // TODO: better matching
+      },
+      '一条龙': {
+        romanized: 'Ya Tiu Long',
+        description: 'Dragon (3 suits)',
         matched: false, // TODO: better matching
       },
     },
@@ -168,7 +178,7 @@
         matched: winningSuits.size === 5,
       },
       '四相凤': {
-        romanized: 'San Tsern Vong',
+        romanized: 'Sam Tsern Vong',
         description: 'Same chow of all three suits (can pong three sequential numbers for 1 limit)',
         matched: false, // TODO: better matching
       },
@@ -184,18 +194,18 @@
       },
       '一条龙': {
         romanized: 'Ya Tiu Long',
-        description: 'Dragon (1 suit for 3 fan, 2 suit for 1 fan, 3 suit for 2 fan)',
-        matched: false, // TODO: not sure what this one requests
+        description: 'Dragon (1 suit)',
+        matched: includes(tiles(Symbol('A'), 1, 2, 3, 4, 5, 6, 7, 8, 9)),
       },
       '一摸三': {
-        romanized: 'Ya Mo San',
+        romanized: 'Ya Mo Sam',
         description: 'All inside with self touch',
         matched: winner.down.length === 0,
       },
     },
     5: {
       '小三元': {
-        romanized: 'Siu San Yu',
+        romanized: 'Siu Sam Yu',
         description: 'Pong of any two of tsong, fa, ba ban with the third as eyes',
         matched: false, // TODO: better matching
       },
@@ -212,7 +222,7 @@
         matched: false, // TODO: better matching
       },
       '大三元': {
-        romanized: 'Da San Yu',
+        romanized: 'Da Sam Yu',
         description: 'Pong tsong, fa, and ban',
         matched: includes([...pong('dragon', 'Haku'), ...pong('dragon', 'Hatsu'), ...pong('dragon', 'Chun')]),
       },
@@ -237,11 +247,11 @@
         matched: includes(tiles(undefined, value, value, value, value, value, value, value, value, value, value, value, value, value, value, value)),
       }])),
     },
-    'Maximum': { // TODO: what does "Maximum" mean, numerically?
+    11: {
       '全绿': {
         romanized: 'Chuen Lo',
         description: 'All green',
-        matched: false, // TODO: what qualifies as green?
+        matched: false, // TODO: sticks 2, 3, 4, 6, 8 + salad
       },
       '大四喜': {
         romanized: 'Da Sei Hei',
@@ -253,10 +263,20 @@
         description: 'Win off first card played',
         matched: false, // TODO: count how many cards have been played
       },
+      '一四七': {
+        romanized: 'Ya Sei Tsut',
+        description: 'Pong any and only 1, 4, 7',
+        matched: false, // TODO: better matching
+      },
       '二五八': {
         romanized: 'E M Ba',
-        description: 'Pong any and only the following combinations: 1, 4, 7; 2, 5, 8; 3, 6, 9',
-        matched: false, // TODO: is this 3 separate rules too?
+        description: 'Pong any and only 2, 5, 8',
+        matched: false, // TODO: better matching
+      },
+      '三六九': {
+        romanized: 'Sam Lok Gao',
+        description: 'Pong any and only 3, 6, 9',
+        matched: false, // TODO: better matching
       },
       '十三不答': {
         romanized: 'Sap Sam Ba Da',
@@ -266,7 +286,7 @@
       '十三大优': {
         romanized: 'Sap Sam Dai Yu',
         description: 'Have 1 and 9 of all suits, one of each wind and a pair of anything',
-        matched: false, // TODO: special case
+        matched: false, // TODO: better matching
       },
       '天糊': {
         romanized: 'Tian Wu',
@@ -276,10 +296,10 @@
       '字一色': {
         romanized: 'Zi Ya Se',
         description: 'Pong all winds (东 南 四 北 + tsong, fa, ba ban)',
-        matched: false, // TODO: not sure how you can manage this one
+        matched: !winningSuits.has('Pin') && !winningSuits.has('Sou') && !winningSuits.has('Man'),
       },
     },
-    '-Maximum': {
+    [-11]: {
       '詐糊': {
         romanized: 'Za Wu',
         description: 'Falsely claim that you have won, must pay everyone the maximum',
