@@ -172,6 +172,7 @@
         description: 'Chicken hand, zero fans',
         matched: () => Object.values(awards)
           .flatMap(rules => Object.values(rules))
+          .map(rule => rule.matched)
           .filter(rule => typeof rule !== 'function')
           .reduce(async (first, next) => (await first) && !(await next), Promise.resolve(true)),
       },
