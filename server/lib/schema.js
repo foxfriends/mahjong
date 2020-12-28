@@ -4,7 +4,8 @@ export const WINDS = ['Ton', 'Shaa', 'Pei', 'Nan'];
 const DRAGONS = ['Chun', 'Hatsu', 'Haku'];
 const SUITS = ['Pin', 'Sou', 'Man'];
 
-const NEXT_TURN = { Ton: 'Nan', Nan: 'Shaa', Shaa: 'Pei', Pei: 'Ton' };
+const NEXT_WIND = { Ton: 'Nan', Nan: 'Shaa', Shaa: 'Pei', Pei: 'Ton' };
+const PREV_WIND = { Nan: 'Ton', Shaa: 'Nan', Pei: 'Shaa', Ton: 'Pei' };
 
 export function player(name) {
     return { name, up: [], down: [], discarded: [], ready: false };
@@ -130,7 +131,7 @@ export default class Schema {
                 if (previous[position]) {
                     let newPosition = position;
                     do {
-                        newPosition = NEXT_TURN[newPosition];
+                        newPosition = PREV_WIND[newPosition];
                     } while (!previous[newPosition]);
                     basis[newPosition] = player(previous[position].name);
                 }
@@ -140,7 +141,7 @@ export default class Schema {
             if (basis.Ton.name === initial.Ton.name) {
                 // Technically if we have reached Ton again, then the game should be done..?
                 // I don't think that really matters to us though.
-                basis.wind = NEXT_TURN[basis.wind];
+                basis.wind = NEXT_WIND[basis.wind];
             }
         }
         return new Schema(basis);
@@ -545,15 +546,15 @@ export default class Schema {
 
     nextTurn() {
         this.previousTurn = this.turn;
-        do { this.turn = NEXT_TURN[this.turn]; } while (!this[this.turn]);
+        do { this.turn = NEXT_WIND[this.turn]; } while (!this[this.turn]);
     }
 
     votePriority() {
         return [
             this.turn,
-            NEXT_TURN[this.turn],
-            NEXT_TURN[NEXT_TURN[this.turn]],
-            NEXT_TURN[NEXT_TURN[NEXT_TURN[this.turn]]],
+            NEXT_WIND[this.turn],
+            NEXT_WIND[NEXT_WIND[this.turn]],
+            NEXT_WIND[NEXT_WIND[NEXT_WIND[this.turn]]],
         ];
     }
 
