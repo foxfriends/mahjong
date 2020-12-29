@@ -491,14 +491,15 @@ export default class Schema {
         const player = { ...this[position] };
         player.up = [...player.up, this.discarded];
         if (!Schema.winningHand(this, player, this.discarded)) {
-            throw new Error('You may not pick up eyes if it does not win the game');
+            throw new Error('You may not pick up eyes if it does not win the game.');
         }
         const tile = this.discarded;
         const i = this[position].up.findIndex(tile => eq(this.tiles[tile], discard));
         const [leftEye] = this[position].up.splice(i, 1);
 
         this[this.previousTurn].discarded.pop();
-        this[position].down.push([leftEye, this.discarded]);
+        const eyes = [leftEye, this.discarded];
+        this[position].down.push(eyes);
         this.drawn = this.discarded;
         this.source = 'discard';
         this.turn = position;
@@ -508,7 +509,7 @@ export default class Schema {
             // stealing someone's kong to win is worth points, so we have to watch for it specifically
             this.source = 'kong';
         }
-        return new Message('win', { position, eyes: [leftEye, this.discarded], reveal: this.tiles, kong });
+        return new Message('win', { position, eyes, reveal: this.tiles, kong });
     }
 
     win(player, kong = false) {
