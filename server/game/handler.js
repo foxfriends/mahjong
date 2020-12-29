@@ -3,6 +3,7 @@ import Schema from '../lib/schema.js';
 import Fs from 'fs';
 import sockets from './sockets.js';
 import * as handlers from './handlers.js';
+import { emitCurrentVotes } from './votes.js';
 
 const games = new Map();
 const playersInGame = new WeakMap();
@@ -104,6 +105,7 @@ export default (io, stateDirectory) => {
             [room, schemas] = await location(socket, name);
             let n = schemas.length - 1;
             schema = schemas[n];
+            emitCurrentVotes(socket, schema);
 
             for (;;) {
                 const message = await socket.recv();

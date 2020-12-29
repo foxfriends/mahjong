@@ -92,3 +92,13 @@ export function cast(socket, schema, vote) {
         socket.emit(new Message('vote', { position, vote }));
     }
 }
+
+export function emitCurrentVotes(socket, schema) {
+    const gameVotes = votes.get(schema);
+    if (!gameVotes) return;
+    Object
+        .entries(gameVotes)
+        .forEach(([position, vote]) => {
+            socket.emit(new Message('vote', { position, vote }))
+        });
+}

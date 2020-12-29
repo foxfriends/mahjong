@@ -125,7 +125,6 @@ export default async function handler(schema, { socket, store, timer, selection,
                             if (get(currentVotes)[myWind]) return; // don't bother voting again
                             try {
                                 await socket.send('ignore');
-                                timer.set(null);
                             } catch (error) {
                                 console.error(error);
                             }

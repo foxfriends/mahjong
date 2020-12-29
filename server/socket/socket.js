@@ -48,6 +48,10 @@ export default class AsyncSocket {
         });
     }
 
+    async sendNoReply(message) {
+        this.raw.send(message);
+    }
+
     broadcast(message) {
         this.raw.to(this.game).send(message);
     }
