@@ -1,6 +1,7 @@
 import { WINDS } from '../lib/schema.js';
 import Message from '../socket/message.js';
 import sockets from './sockets.js';
+
 const votes = new WeakMap();
 
 export default class Vote {
@@ -73,6 +74,7 @@ export function handle(socket, schema, votes) {
 
 export function cast(socket, schema, vote) {
     let gameVotes = votes.get(schema);
+    console.log(gameVotes);
     if (vote.method === 'Ignore' && !gameVotes) return; // discard must be the first vote
     gameVotes = gameVotes || {};
     const position = schema.playerWind(socket.name);

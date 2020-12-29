@@ -3,7 +3,15 @@
   import Schema, { eq } from '../../lib/schema.js';
   import context from '../../game/context.js';
 
-  const { selection, selectionSets, socket, store, hasAction, timer } = context();
+  const {
+    currentVotes,
+    selection,
+    selectionSets,
+    socket,
+    store,
+    hasAction,
+    timer,
+  } = context();
 
   let actions = []
   $: actions = $selectionSets
@@ -62,7 +70,7 @@
 
 <div class="container">
   <div class="actions">
-    {#if $hasAction && $timer}
+    {#if $hasAction && $timer && !$currentVotes[myWind]}
       {#if $timer.paused}
         <button class="action" on:click={cancel}>
           Cancel Wait

@@ -5,6 +5,7 @@
   import ReadyButton from './ReadyButton.svelte';
   import DiscardInfo from './DiscardInfo.svelte';
   import CurrentWind from './CurrentWind.svelte';
+  import CurrentVotes from './CurrentVotes.svelte';
   import Timer from './Timer.svelte';
   import context from '../../game/context.js';
 
@@ -31,6 +32,7 @@
   {#if $store.wind}
     <CurrentWind wind={$store.wind} />
   {/if}
+  <CurrentVotes />
 {:else}
   <PlayerList order={ORDER[$store.playerWind(socket.name)]} />
   <ReadyButton />
