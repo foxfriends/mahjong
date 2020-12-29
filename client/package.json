@@ -25,10 +25,16 @@
     "autoprefixer": "^9.7.6",
     "parcel-bundler": "^1.12.4",
     "parcel-plugin-svelte": "^4.0.6",
+    "parcel-plugin-text": "^0.9.7",
     "postcss-modules": "^1.5.0",
-    "socket.io-client": "^2.3.0",
     "svelte": "^3.20.1"
   },
   "browserslist": "last 1 chrome version, last 1 firefox version",
-  "dependencies": {}
+  "dependencies": {
+    "socket.io-client": "^2.3.0",
+    "tau-prolog": "^0.3.0"
+  },
+  "parcel-plugin-text": {
+    "extensions": ["pl"]
+  }
 }

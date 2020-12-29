@@ -1,6 +1,11 @@
 <script>
+  import pl from 'tau-prolog';
+  import lists from 'tau-prolog/modules/lists.js';
   import context from '../../game/context';
   import Schema from '../../lib/schema';
+  import RULES from '../../scoring/scoring.pl';
+
+  lists(pl);
 
   const { store, socket } = context();
 
@@ -42,275 +47,369 @@
   const tiles = (suit, ...values) => values.map(value => ({ suit, value }));
   const pong = (suit, value) => tiles(suit, value, value, value);
 
+  const is = (type) => (v) => typeof v === type;
+  const lower = (v) => typeof v === 'string' ? v.toLowerCase() : v;
   const ch = (i) => ['一', '二', '三', '四', '五', '六', '七', '八', '九'][i];
   const ro = (i) => ['Ya', 'E', 'Sam', 'Sei', 'M', 'Lok', 'Tsut', 'Ba', 'Gao'][i];
 
-  // TODO: Will this be sufficient, or will going all Prolog be easier?
-  $: awards = {
-    1: {
-      '白板': {
-        romanized: 'Ba Ban',
-        description: 'Pong ba ban',
-        matched: includes(pong('dragon', 'Haku')),
-      },
-      '全求人': {
-        romanized: 'Chun Cao Yun',
-        description: 'All outside',
-        matched: winner.up.length === 0,
-      },
-      '獨聽': {
-        romanized: 'Doc Ting',
-        description: 'Calling one card',
-        matched: false, // TODO: this one is harder, requires analyzing the hand
-      },
-      '發財': {
-        romanized: 'Fa Tsai',
-        description: 'Pong fa tsai',
-        matched: includes(pong('dragon', 'Hatsu')),
-      },
-      '槓上花': {
-        romanized: 'Gong Tsern Fa',
-        description: 'Win off gong (pick up gong, win off of card picked up as a result of gong)',
-        matched: $store.source === 'back',
-      },
-      '紅中': {
-        romanized: 'Hong Tsong',
-        description: 'Pong hong tsong',
-        matched: includes(pong('dragon', 'Chun')),
-      },
-      '圈風': {
-        romanized: 'Hyun Feng',
-        description: 'Pong the round wind',
-        matched: includes(pong('wind', $store.wind)),
-      },
-      '缺一门': {
-        romanized: 'Ku Ye Mun',
-        description: 'Two numerical suits',
-        matched: winningSuits.size === 2 && !winningSuits.has('dragon') && !winningSuits.has('wind'),
-      },
-      '老小': {
-        romanized: 'Lo Siu',
-        description: 'Chow of ends of same suit',
-        matched: includes(tiles(Symbol('A'), 1, 2, 3, 7, 8, 9)),
-      },
-      '門風': {
-        romanized: 'Mun Feng',
-        description: 'Pong the wind depending on where you sit (jong is 東)',
-        matched: includes(tiles('wind', $store.turn)),
-      },
-      '没字没花': {
-        romanized: 'Mo Zi Mo Fa',
-        description: 'No flowers, no winds',
-        matched: false, // TODO: we don't have flowers, so I don't think this one is fair
-      },
-      '門前清': {
-        romanized: 'Mun Tsing Tsing',
-        description: 'All inside but win off of a played card',
-        matched: winner.down.length === 1 && ($store.source === 'discard' || $store.source === 'kong'),
-      },
-      '平糊': {
-        romanized: 'Ping Wu',
-        description: 'All chows',
-        matched: false, // TODO: better matching
-      },
-      '爵': {
-        romanized: 'Tsern',
-        description: 'Pair of eyes (2, 5, 8)',
-        matched: false, // TODO: better matching
-      },
-      '自摸': {
-        romanized: 'Tsi Mo',
-        description: 'Self touch',
-        matched: $store.source === 'front' || $store.source === 'back',
-      },
-      '姐妹': {
-        romanized: 'Tsi Mui',
-        description: 'Pair of same chow of different suits',
-        matched: false, // TODO: better matching
-      },
-      '断优': {
-        romanized: 'Tsun Yu',
-        description: 'No ends',
-        matched: !includes([{ suit: Symbol('A'), value: 1 }]) && !includes([{ suit: Symbol('A'), value: 9 }]),
-      },
-      '搶槓': {
-        romanized: 'Tsurng Gong',
-        description: 'Steal from another person\'s gong to win',
-        matched: $store.source === 'kong',
-      },
-      '一条龙': {
-        romanized: 'Ya Tiu Long',
-        description: 'Dragon (2 suits)',
-        matched: false, // TODO: better matching
-      },
+  const promisify = (session) => ({
+    consult: src => new Promise((resolve, reject) => {
+      session.consult(src, { success: resolve, error: reject });
+    }),
+    query: src => new Promise((resolve, reject) => {
+      session.query(src, { success: resolve, error: reject })
+    }),
+    answer: () => new Promise((resolve, reject) => {
+      session.answer({ success: resolve, error: reject, fail: () => resolve(false), limit: reject });
+    }),
+    check(src) {
+      return this
+        .query(src)
+        .then(() => this.answer())
+        .then((a) => (console.log(session.format_answer(a)), a))
+        .then(Boolean)
+        .catch((error) => {
+          console.error(session.format_answer(error));
+          return false;
+        });
     },
-    2: {
-      '混优': {
-        romanized: 'Wan Yu',
-        description: 'All ends with winds',
-        matched: false, // TODO: better matching
+  });
+
+  let awards = {};
+  $: (async () => {
+    const session = promisify(pl.create(100000));
+    await session.consult(RULES);
+    const suits  = $store.tiles
+      .map((tile, i) => `suit(${i}, ${lower(tile.suit)}).`)
+      .join('\n');
+    const values = $store.tiles
+      .map((tile, i) => `value(${i}, ${lower(tile.value)}).`)
+      .join('\n');
+    const up     = $store[$store.turn].up
+      .map(tile => `up(${tile}).`)
+      .join('\n');
+    const down   = $store[$store.turn].down
+      .flat()
+      .filter(is('number'))
+      .map(tile => `down(${tile}).`)
+      .join('\n');
+    const melded = $store[$store.turn].down
+      .map(meld => `melded([${meld.filter(is('number')).join(', ')}]).`)
+      .join('\n');
+    const wind   = `prevailing(${lower($store.wind)}). turn(${lower($store.turn)}).`;
+    const source = `source(${lower($store.source)}). drawn(${$store.drawn}).`;
+    const state = [suits, values, up, down, melded, wind, source].join('\n');
+    await session.consult(state);
+
+    console.log(state);
+
+    const awards_ = {
+      1: {
+        '白板': {
+          romanized: 'Ba Ban',
+          description: 'Pong ba ban',
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            removePong(dragon, haku, M, _).
+          `),
+        },
+        '全求人': {
+          romanized: 'Chun Cao Yun',
+          description: 'All outside',
+          matched: winner.up.length === 0,
+        },
+        '獨聽': {
+          romanized: 'Doc Ting',
+          description: 'Calling one card',
+          matched: false, // await session.check('findall(T, hand(T), Hs), drawn(D), remove(D, Hs, H), findall(T, calling(H, T), Ts), length(Ts, 1).'),
+        },
+        '發財': {
+          romanized: 'Fa Tsai',
+          description: 'Pong fa tsai',
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            removePong(dragon, hatsu, M, _).
+          `),
+        },
+        '槓上花': {
+          romanized: 'Gong Tsern Fa',
+          description: 'Win off gong (pick up gong, win off of card picked up as a result of gong)',
+          matched: $store.source === 'back',
+        },
+        '紅中': {
+          romanized: 'Hong Tsong',
+          description: 'Pong hong tsong',
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            removePong(dragon, chun, M, _).
+          `),
+        },
+        '圈風': {
+          romanized: 'Hyun Feng',
+          description: 'Pong the round wind',
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            prevailing(W),
+            removePong(wind, W, M, _).
+          `),
+        },
+        '缺一门': {
+          romanized: 'Ku Ye Mun',
+          description: 'Two numerical suits',
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            findall(S, suit(S), Ss),
+            list_to_set(Ss, S),
+            length(S, 2).
+          `),
+        },
+        '老小': {
+          romanized: 'Lo Siu',
+          description: 'Chow of ends of same suit',
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            removeChow(S, 1, M, M2),
+            removeChow(S, 7, M2, _).
+          `),
+        },
+        '門風': {
+          romanized: 'Mun Feng',
+          description: 'Pong the wind depending on where you sit (jong is 東)',
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            turn(W),
+            removePong(wind, W, M, _).
+          `),
+        },
+        '没字没花': {
+          romanized: 'Mo Zi Mo Fa',
+          description: 'No flowers, no winds',
+          matched: false, // TODO: we don't have flowers, so I don't think this one is fair
+        },
+        '門前清': {
+          romanized: 'Mun Tsing Tsing',
+          description: 'All inside but win off of a played card',
+          matched: winner.down.length === 1 && ($store.source === 'discard' || $store.source === 'kong'),
+        },
+        '平糊': {
+          romanized: 'Ping Wu',
+          description: 'All chows',
+          matched: false, // TODO: better matching
+        },
+        '爵': {
+          romanized: 'Tsern',
+          description: 'Pair of eyes (2, 5, 8)',
+          matched: false, // TODO: better matching
+        },
+        '自摸': {
+          romanized: 'Tsi Mo',
+          description: 'Self touch',
+          matched: $store.source === 'front' || $store.source === 'back',
+        },
+        '姐妹': {
+          romanized: 'Tsi Mui',
+          description: 'Pair of same chow of different suits',
+          matched: false, // TODO: better matching
+        },
+        '断优': {
+          romanized: 'Tsun Yu',
+          description: 'No ends',
+          matched: !includes([{ suit: Symbol('A'), value: 1 }]) && !includes([{ suit: Symbol('A'), value: 9 }]),
+        },
+        '搶槓': {
+          romanized: 'Tsurng Gong',
+          description: 'Steal from another person\'s gong to win',
+          matched: $store.source === 'kong',
+        },
+        '一条龙': {
+          romanized: 'Ya Tiu Long',
+          description: 'Dragon (2 suits)',
+          matched: false, // TODO: better matching
+        },
       },
-      '一班高': {
-        romanized: 'Ye Ban Go',
-        description: 'Two of the same chow, in the same suit',
-        matched: false, // TODO: better matching
+      2: {
+        '混优': {
+          romanized: 'Wan Yu',
+          description: 'All ends with winds',
+          matched: false, // TODO: better matching
+        },
+        '一班高': {
+          romanized: 'Ye Ban Go',
+          description: 'Two of the same chow, in the same suit',
+          matched: false, // TODO: better matching
+        },
+        '一条龙': {
+          romanized: 'Ya Tiu Long',
+          description: 'Dragon (3 suits)',
+          matched: false, // TODO: better matching
+        },
       },
-      '一条龙': {
-        romanized: 'Ya Tiu Long',
-        description: 'Dragon (3 suits)',
-        matched: false, // TODO: better matching
+      3: {
+        '對對糊': {
+          romanized: 'De De Wu',
+          description: 'All pongs',
+          matched: false, // TODO: better matching
+        },
+        '五门齐': {
+          romanized: 'M Mun Tsai',
+          description: 'All five suits',
+          matched: winningSuits.size === 5,
+        },
+        '四相凤': {
+          romanized: 'Sam Tsern Vong',
+          description: 'Same chow of all three suits (can pong three sequential numbers for 1 limit)',
+          matched: false, // TODO: better matching
+        },
+        '全带优': {
+          romanized: 'Tsun Dai Yu',
+          description: 'All ends without winds',
+          matched: false, // TODO: better matching
+        },
+        '混一色': {
+          romanized: 'Wan Ya Se',
+          description: 'All one suit with winds',
+          matched: winningSuits.size === 2 && winningSuits.has('wind') && !winningSuits.has('dragon'),
+        },
+        '一条龙': {
+          romanized: 'Ya Tiu Long',
+          description: 'Dragon (1 suit)',
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            removeChow(S, 1, M, M2),
+            removeChow(S, 4, M2, M3),
+            removeChow(S, 7, M3, _).
+          `),
+        },
+        '一摸三': {
+          romanized: 'Ya Mo Sam',
+          description: 'All inside with self touch',
+          matched: winner.down.length === 0,
+        },
       },
-    },
-    3: {
-      '對對糊': {
-        romanized: 'De De Wu',
-        description: 'All pongs',
-        matched: false, // TODO: better matching
+      5: {
+        '小三元': {
+          romanized: 'Siu Sam Yu',
+          description: 'Pong of any two of tsong, fa, ba ban with the third as eyes',
+          matched: false, // TODO: better matching
+        },
+        '小七对': {
+          romanized: 'Siu Tsut Doi',
+          description: 'All pairs',
+          matched: false, // TODO: special case?
+        },
       },
-      '雞糊': {
-        romanized: 'Gai Wu',
-        description: 'Chicken hand, zero fans',
-        matched: () => Object.values(awards)
-          .flatMap(rules => Object.values(rules))
-          .map(rule => rule.matched)
-          .filter(rule => typeof rule !== 'function')
-          .reduce(async (first, next) => (await first) && !(await next), Promise.resolve(true)),
+      8: {
+        '坎坎糊': {
+          romanized: 'Can Can Wu',
+          description: 'All pongs but all inside, must be calling eyes unless you self touch',
+          matched: false, // TODO: better matching
+        },
+        '大三元': {
+          romanized: 'Da Sam Yu',
+          description: 'Pong tsong, fa, and ban',
+          matched: includes([...pong('dragon', 'Haku'), ...pong('dragon', 'Hatsu'), ...pong('dragon', 'Chun')]),
+        },
+        '大七对': {
+          romanized: 'Dai Tsut Doi',
+          description: 'Two ya ban go\'s',
+          matched: false, // TODO: better matching
+        },
+        '小四喜': {
+          romanized: 'Siu Sei Hei',
+          description: 'Pong 3 winds with last as eyes',
+          matched: false, // TODO: better matching
+        },
+        '清一色': {
+          romanized: 'Ting Ya Se',
+          description: 'All one numerical suit',
+          matched: winningSuits.size === 1 && !winningSuits.has('wind') && !winningSuits.has('dragon'),
+        },
+        ...Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8, 9].map(value => [`全带${ch(value)}`, {
+          romanized: `Tsun Dai ${ro(value)}`,
+          description: `All ${value}`,
+          matched: includes(tiles(undefined, value, value, value, value, value, value, value, value, value, value, value, value, value, value, value)),
+        }])),
       },
-      '五门齐': {
-        romanized: 'M Mun Tsai',
-        description: 'All five suits',
-        matched: winningSuits.size === 5,
+      11: {
+        '全绿': {
+          romanized: 'Chuen Lo',
+          description: 'All green',
+          matched: false, // TODO: sticks 2, 3, 4, 6, 8 + salad
+        },
+        '大四喜': {
+          romanized: 'Da Sei Hei',
+          description: 'Pong all winds (东 南 西 北)',
+          matched: includes([...pong('wind', 'Ton'), ...pong('wind', 'Nan'), ...pong('wind', 'Shaa'), ...pong('wind', 'Pei')]),
+        },
+        '地糊': {
+          romanized: 'Dei Wu',
+          description: 'Win off first card played',
+          matched: false, // TODO: count how many cards have been played
+        },
+        '一四七': {
+          romanized: 'Ya Sei Tsut',
+          description: 'Pong any and only 1, 4, 7',
+          matched: false, // TODO: better matching
+        },
+        '二五八': {
+          romanized: 'E M Ba',
+          description: 'Pong any and only 2, 5, 8',
+          matched: false, // TODO: better matching
+        },
+        '三六九': {
+          romanized: 'Sam Lok Gao',
+          description: 'Pong any and only 3, 6, 9',
+          matched: false, // TODO: better matching
+        },
+        '十三不答': {
+          romanized: 'Sap Sam Ba Da',
+          description: 'Start the hand with zero connections, first card played cannot connect to anything in the hand',
+          matched: false, // TODO: special case
+        },
+        '十三大优': {
+          romanized: 'Sap Sam Dai Yu',
+          description: 'Have 1 and 9 of all suits, one of each wind and a pair of anything',
+          matched: false, // TODO: better matching
+        },
+        '天糊': {
+          romanized: 'Tian Wu',
+          description: 'Be the starter (jong) and win off the very start',
+          matched: false, // TODO: count how many cards have been played
+        },
+        '字一色': {
+          romanized: 'Zi Ya Se',
+          description: 'Pong all winds (东 南 四 北 + tsong, fa, ba ban)',
+          matched: !winningSuits.has('Pin') && !winningSuits.has('Sou') && !winningSuits.has('Man'),
+        },
       },
-      '四相凤': {
-        romanized: 'Sam Tsern Vong',
-        description: 'Same chow of all three suits (can pong three sequential numbers for 1 limit)',
-        matched: false, // TODO: better matching
+      [-11]: {
+        '詐糊': {
+          romanized: 'Za Wu',
+          description: 'Falsely claim that you have won, must pay everyone the maximum',
+          matched: false, // TODO: foxfriends/mahjong#7
+        },
       },
-      '全带优': {
-        romanized: 'Tsun Dai Yu',
-        description: 'All ends without winds',
-        matched: false, // TODO: better matching
-      },
-      '混一色': {
-        romanized: 'Wan Ya Se',
-        description: 'All one suit with winds',
-        matched: winningSuits.size === 2 && winningSuits.has('wind') && !winningSuits.has('dragon'),
-      },
-      '一条龙': {
-        romanized: 'Ya Tiu Long',
-        description: 'Dragon (1 suit)',
-        matched: includes(tiles(Symbol('A'), 1, 2, 3, 4, 5, 6, 7, 8, 9)),
-      },
-      '一摸三': {
-        romanized: 'Ya Mo Sam',
-        description: 'All inside with self touch',
-        matched: winner.down.length === 0,
-      },
-    },
-    5: {
-      '小三元': {
-        romanized: 'Siu Sam Yu',
-        description: 'Pong of any two of tsong, fa, ba ban with the third as eyes',
-        matched: false, // TODO: better matching
-      },
-      '小七对': {
-        romanized: 'Siu Tsut Doi',
-        description: 'All pairs',
-        matched: false, // TODO: special case?
-      },
-    },
-    8: {
-      '坎坎糊': {
-        romanized: 'Can Can Wu',
-        description: 'All pongs but all inside, must be calling eyes unless you self touch',
-        matched: false, // TODO: better matching
-      },
-      '大三元': {
-        romanized: 'Da Sam Yu',
-        description: 'Pong tsong, fa, and ban',
-        matched: includes([...pong('dragon', 'Haku'), ...pong('dragon', 'Hatsu'), ...pong('dragon', 'Chun')]),
-      },
-      '大七对': {
-        romanized: 'Dai Tsut Doi',
-        description: 'Two ya ban go\'s',
-        matched: false, // TODO: better matching
-      },
-      '小四喜': {
-        romanized: 'Siu Sei Hei',
-        description: 'Pong 3 winds with last as eyes',
-        matched: false, // TODO: better matching
-      },
-      '清一色': {
-        romanized: 'Ting Ya Se',
-        description: 'All one numerical suit',
-        matched: winningSuits.size === 1 && !winningSuits.has('wind') && !winningSuits.has('dragon'),
-      },
-      ...Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8, 9].map(value => [`全带${ch(value)}`, {
-        romanized: `Tsun Dai ${ro(value)}`,
-        description: `All ${value}`,
-        matched: includes(tiles(undefined, value, value, value, value, value, value, value, value, value, value, value, value, value, value, value)),
-      }])),
-    },
-    11: {
-      '全绿': {
-        romanized: 'Chuen Lo',
-        description: 'All green',
-        matched: false, // TODO: sticks 2, 3, 4, 6, 8 + salad
-      },
-      '大四喜': {
-        romanized: 'Da Sei Hei',
-        description: 'Pong all winds (东 南 西 北)',
-        matched: includes([...pong('wind', 'Ton'), ...pong('wind', 'Nan'), ...pong('wind', 'Shaa'), ...pong('wind', 'Pei')]),
-      },
-      '地糊': {
-        romanized: 'Dei Wu',
-        description: 'Win off first card played',
-        matched: false, // TODO: count how many cards have been played
-      },
-      '一四七': {
-        romanized: 'Ya Sei Tsut',
-        description: 'Pong any and only 1, 4, 7',
-        matched: false, // TODO: better matching
-      },
-      '二五八': {
-        romanized: 'E M Ba',
-        description: 'Pong any and only 2, 5, 8',
-        matched: false, // TODO: better matching
-      },
-      '三六九': {
-        romanized: 'Sam Lok Gao',
-        description: 'Pong any and only 3, 6, 9',
-        matched: false, // TODO: better matching
-      },
-      '十三不答': {
-        romanized: 'Sap Sam Ba Da',
-        description: 'Start the hand with zero connections, first card played cannot connect to anything in the hand',
-        matched: false, // TODO: special case
-      },
-      '十三大优': {
-        romanized: 'Sap Sam Dai Yu',
-        description: 'Have 1 and 9 of all suits, one of each wind and a pair of anything',
-        matched: false, // TODO: better matching
-      },
-      '天糊': {
-        romanized: 'Tian Wu',
-        description: 'Be the starter (jong) and win off the very start',
-        matched: false, // TODO: count how many cards have been played
-      },
-      '字一色': {
-        romanized: 'Zi Ya Se',
-        description: 'Pong all winds (东 南 四 北 + tsong, fa, ba ban)',
-        matched: !winningSuits.has('Pin') && !winningSuits.has('Sou') && !winningSuits.has('Man'),
-      },
-    },
-    [-11]: {
-      '詐糊': {
-        romanized: 'Za Wu',
-        description: 'Falsely claim that you have won, must pay everyone the maximum',
-        matched: false, // TODO: foxfriends/mahjong#7
-      },
-    },
-  };
+    };
+
+    // Chicken hand is special!
+    const chicken = Object.values(awards_)
+      .flatMap(rules => Object.values(rules))
+      .every(rule => !rule.matched);
+    awards_[3]['雞糊'] = {
+      romanized: 'Gai Wu',
+      description: 'Chicken hand',
+      matched: chicken,
+    };
+
+    awards = awards_;
+  })();
 
   async function playAgain() {
     const { schema } = await socket.send('playAgain');
