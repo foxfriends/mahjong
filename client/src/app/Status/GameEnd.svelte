@@ -69,7 +69,7 @@
         .then((a) => (console.log(session.format_answer(a)), a))
         .then(Boolean)
         .catch((error) => {
-          console.error(session.format_answer(error));
+          console.error(src, session.format_answer(error));
           return false;
         });
     },
@@ -77,8 +77,13 @@
 
   let awards = {};
   $: (async () => {
-    const session = promisify(pl.create(100000));
-    await session.consult(RULES);
+    const rs = pl.create(100000);
+    const session = promisify(rs);
+    try {
+      await session.consult(RULES);
+    } catch (error) {
+      console.error(rs.format_answer(error));
+    }
     const suits  = $store.tiles
       .map((tile, i) => `suit(${i}, ${lower(tile.suit)}).`)
       .join('\n');
@@ -87,19 +92,23 @@
       .join('\n');
     const up     = $store[$store.turn].up
       .map(tile => `up(${tile}).`)
-      .join('\n');
+      .join('\n') || 'up(_) :- false.';
     const down   = $store[$store.turn].down
       .flat()
       .filter(is('number'))
       .map(tile => `down(${tile}).`)
-      .join('\n');
+      .join('\n') || 'down(_) :- false.';
     const melded = $store[$store.turn].down
       .map(meld => `melded([${meld.filter(is('number')).join(', ')}]).`)
-      .join('\n');
+      .join('\n') || 'melded(_) :- false.';
     const wind   = `prevailing(${lower($store.wind)}). turn(${lower($store.turn)}).`;
     const source = `source(${lower($store.source)}). drawn(${$store.drawn}).`;
     const state = [suits, values, up, down, melded, wind, source].join('\n');
-    await session.consult(state);
+    try {
+      await session.consult(state);
+    } catch (error) {
+      console.error(rs.format_answer(error));
+    }
 
     console.log(state);
 
@@ -122,6 +131,7 @@
         '獨聽': {
           romanized: 'Doc Ting',
           description: 'Calling one card',
+          // this code is way too slow (the rest of the code is also very slow, but this is worst)
           matched: false, // await session.check('findall(T, hand(T), Hs), drawn(D), remove(D, Hs, H), findall(T, calling(H, T), Ts), length(Ts, 1).'),
         },
         '發財': {
@@ -161,8 +171,7 @@
           romanized: 'Ku Ye Mun',
           description: 'Two numerical suits',
           matched: await session.check(`
-            findall(T, hand(T), H),
-            findall(S, suit(S), Ss),
+            findall(S, (hand(T), suit(T, S)), Ss),
             list_to_set(Ss, S),
             length(S, 2).
           `),
@@ -200,12 +209,24 @@
         '平糊': {
           romanized: 'Ping Wu',
           description: 'All chows',
-          matched: false, // TODO: better matching
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            removeChow(_, _, M, M2),
+            removeChow(_, _, M2, M3),
+            removeChow(_, _, M3, M4),
+            removeChow(_, _, M4, _).
+          `),
         },
         '爵': {
           romanized: 'Tsern',
           description: 'Pair of eyes (2, 5, 8)',
-          matched: false, // TODO: better matching
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            member([X, Y], M),
+            (eyes(_, 2, [X, Y]) ; eyes(_, 5, [X, Y]) ; eyes(_, 8, [X, Y])).
+          `),
         },
         '自摸': {
           romanized: 'Tsi Mo',
@@ -215,12 +236,18 @@
         '姐妹': {
           romanized: 'Tsi Mui',
           description: 'Pair of same chow of different suits',
-          matched: false, // TODO: better matching
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            removeChow(S1, V, M, M2),
+            removeChow(S2, V, M2, _),
+            S1 \\= S2.
+          `),
         },
         '断优': {
           romanized: 'Tsun Yu',
           description: 'No ends',
-          matched: !includes([{ suit: Symbol('A'), value: 1 }]) && !includes([{ suit: Symbol('A'), value: 9 }]),
+          matched: await session.check(`\\+((hand(T), (value(T, 1); value(T, 9)))).`),
         },
         '搶槓': {
           romanized: 'Tsurng Gong',
@@ -230,7 +257,15 @@
         '一条龙': {
           romanized: 'Ya Tiu Long',
           description: 'Dragon (2 suits)',
-          matched: false, // TODO: better matching
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            removeChow(S1, 1, M, M2),
+            removeChow(S2, 4, M2, M3),
+            removeChow(S3, 7, M3, _),
+            list_to_set([S1, S2, S3], Ss),
+            length(Ss, 2).
+          `),
         },
       },
       2: {
@@ -242,19 +277,40 @@
         '一班高': {
           romanized: 'Ye Ban Go',
           description: 'Two of the same chow, in the same suit',
-          matched: false, // TODO: better matching
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            removeChow(S, V, M, M2),
+            removeChow(S, V, M2, _).
+          `),
         },
         '一条龙': {
           romanized: 'Ya Tiu Long',
           description: 'Dragon (3 suits)',
-          matched: false, // TODO: better matching
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            removeChow(S1, 1, M, M2),
+            removeChow(S2, 4, M2, M3),
+            removeChow(S3, 7, M3, _),
+            S1 \\= S2,
+            S2 \\= S3,
+            S3 \\= S1.
+          `),
         },
       },
       3: {
         '對對糊': {
           romanized: 'De De Wu',
           description: 'All pongs',
-          matched: false, // TODO: better matching
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            removePong(_, _, M, M2),
+            removePong(_, _, M2, M3),
+            removePong(_, _, M3, M4),
+            removePong(_, _, M4, _).
+          `),
         },
         '五门齐': {
           romanized: 'M Mun Tsai',
@@ -263,8 +319,14 @@
         },
         '四相凤': {
           romanized: 'Sam Tsern Vong',
-          description: 'Same chow of all three suits (can pong three sequential numbers for 1 limit)',
-          matched: false, // TODO: better matching
+          description: 'Same chow of all three suits',
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            removeChow(pin, V, M, M2),
+            removeChow(man, V, M2, M3),
+            removeChow(sou, V, M3, _).
+          `),
         },
         '全带优': {
           romanized: 'Tsun Dai Yu',
@@ -313,8 +375,14 @@
         },
         '大三元': {
           romanized: 'Da Sam Yu',
-          description: 'Pong tsong, fa, and ban',
-          matched: includes([...pong('dragon', 'Haku'), ...pong('dragon', 'Hatsu'), ...pong('dragon', 'Chun')]),
+          description: 'Pong tsong, fa, and ba ban',
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            removePong(dragon, haku, M, M2),
+            removePong(dragon, hatsu, M2, M3),
+            removePong(dragon, chun, M3, _).
+          `),
         },
         '大七对': {
           romanized: 'Dai Tsut Doi',
@@ -331,22 +399,29 @@
           description: 'All one numerical suit',
           matched: winningSuits.size === 1 && !winningSuits.has('wind') && !winningSuits.has('dragon'),
         },
-        ...Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8, 9].map(value => [`全带${ch(value)}`, {
+        ...Object.fromEntries(await Promise.all([1, 2, 3, 4, 5, 6, 7, 8, 9].map(async (value) => [`全带${ch(value)}`, {
           romanized: `Tsun Dai ${ro(value)}`,
           description: `All ${value}`,
-          matched: includes(tiles(undefined, value, value, value, value, value, value, value, value, value, value, value, value, value, value, value)),
-        }])),
+          matched: await session.check(`\\+((hand(T), value(T, V), V \\= ${value})).`),
+        }]))),
       },
       11: {
         '全绿': {
           romanized: 'Chuen Lo',
           description: 'All green',
-          matched: false, // TODO: sticks 2, 3, 4, 6, 8 + salad
+          matched: await session.check(`\\+((hand(T), \\+(green(T)))).`)
         },
         '大四喜': {
           romanized: 'Da Sei Hei',
           description: 'Pong all winds (东 南 西 北)',
-          matched: includes([...pong('wind', 'Ton'), ...pong('wind', 'Nan'), ...pong('wind', 'Shaa'), ...pong('wind', 'Pei')]),
+          matched: await session.check(`
+            findall(T, hand(T), H),
+            meldings(H, M),
+            removePong(wind, ton, M, M2),
+            removePong(wind, shaa, M2, M3),
+            removePong(wind, nan, M3, M4),
+            removePong(wind, pei, M4, _).
+          `),
         },
         '地糊': {
           romanized: 'Dei Wu',

@@ -13,23 +13,12 @@ numerical(man).
 numerical(sou).
 
 % The green tiles
-green(dragon, hatsu).
-green(sou, 2).
-green(sou, 3).
-green(sou, 4).
-green(sou, 6).
-green(sou, 8).
-
-% Numerical tile values
-tileNumber(1).
-tileNumber(2).
-tileNumber(3).
-tileNumber(4).
-tileNumber(5).
-tileNumber(6).
-tileNumber(7).
-tileNumber(8).
-tileNumber(9).
+green(T) :- tile(T, dragon, hatsu).
+green(T) :- tile(T, sou, 2).
+green(T) :- tile(T, sou, 3).
+green(T) :- tile(T, sou, 4).
+green(T) :- tile(T, sou, 6).
+green(T) :- tile(T, sou, 8).
 
 % Wind values
 wind(ton).
