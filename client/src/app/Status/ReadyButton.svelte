@@ -26,7 +26,7 @@
   .button {
     position: absolute;
     left: 50vw;
-    top: 95vh;
+    top: calc(100vh - 100px);
     width: 300px;
     height: 50px;
     transform: translateX(-50%);
