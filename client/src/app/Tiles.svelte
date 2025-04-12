@@ -22,11 +22,11 @@
 
   let toDraw = -1;
   $: {
-      const store = $store;
-      if (store) {
-        if (store.roll !== undefined) {
-          const [wall, stackIndex] = store.nextDraw();
-          const stack = store.walls[wall][stackIndex];
+      const storeValue = $store;
+      if (storeValue) {
+        if (storeValue.roll !== undefined) {
+          const [wall, stackIndex] = storeValue.nextDraw();
+          const stack = storeValue.walls[wall][stackIndex];
           toDraw = stack[stack.length - 1];
         } else {
           toDraw = -1;
@@ -36,9 +36,9 @@
 
   let exactMatches = [];
   $: {
-    const store = $store;
+    const storeValue = $store;
     if (discarded) {
-      exactMatches = store[myWind].up.filter(tile => store.tiles[tile].suit === discarded.suit && store.tiles[tile].value === discarded.value);
+      exactMatches = storeValue[myWind].up.filter(tile => storeValue.tiles[tile].suit === discarded.suit && storeValue.tiles[tile].value === discarded.value);
     } else {
       exactMatches = [];
     }
@@ -49,11 +49,11 @@
 
   let canWin = false;
   $: {
-    const store = $store;
+    const storeValue = $store;
     if (discarded) {
-      const player = { ...store[myWind] };
-      player.up = [...player.up, store.discarded];
-      canWin = Schema.winningHand(store, player, store.discarded);
+      const player = { ...storeValue[myWind] };
+      player.up = [...player.up, storeValue.discarded];
+      canWin = Schema.winningHand(storeValue, player, storeValue.discarded);
     } else {
       canWin = false;
     }
@@ -61,15 +61,15 @@
 
   let canChow = [];
   $: {
-    const store = $store;
+    const storeValue = $store;
     if (discarded) {
       if (typeof discarded.value === 'number') {
-        const ofSuit = store[myWind].up.filter(tile => store.tiles[tile].suit === discarded.suit);
+        const ofSuit = storeValue[myWind].up.filter(tile => storeValue.tiles[tile].suit === discarded.suit);
         const required = [
-          ofSuit.find(tile => store.tiles[tile].value === discarded.value - 2),
-          ofSuit.find(tile => store.tiles[tile].value === discarded.value - 1),
-          ofSuit.find(tile => store.tiles[tile].value === discarded.value + 1),
-          ofSuit.find(tile => store.tiles[tile].value === discarded.value + 2),
+          ofSuit.find(tile => storeValue.tiles[tile].value === discarded.value - 2),
+          ofSuit.find(tile => storeValue.tiles[tile].value === discarded.value - 1),
+          ofSuit.find(tile => storeValue.tiles[tile].value === discarded.value + 1),
+          ofSuit.find(tile => storeValue.tiles[tile].value === discarded.value + 2),
         ];
         canChow = [
           required.slice(0, 2).every(x => typeof x === 'number') ? [required[0], required[1]] : null,
@@ -85,7 +85,7 @@
   let selecting = false;
   $: {
     const list = [];
-    const store = $store;
+    const storeValue = $store;
     if (myWind) {
       const pongs = [];
       if (exactMatches.length === 2) {
@@ -126,10 +126,10 @@
           },
         });
 
-        const player = { ...store[myWind] };
+        const player = { ...storeValue[myWind] };
         player.up = player.up.filter(tile => !tiles.includes(tile));
-        player.down = [...player.down, [...tiles, store.discarded]];
-        if (Schema.winningHand(store, player)) {
+        player.down = [...player.down, [...tiles, storeValue.discarded]];
+        if (Schema.winningHand(storeValue, player)) {
           list.push({
             tiles,
             label: 'Win',
@@ -179,10 +179,10 @@
       }
 
       const willWin = tiles => {
-        const player = { ...store[myWind] };
+        const player = { ...storeValue[myWind] };
         player.up = player.up.filter(tile => !tiles.includes(tile));
-        player.down = [...player.down, [...tiles, store.discarded]];
-        return Schema.winningHand(store, player);
+        player.down = [...player.down, [...tiles, storeValue.discarded]];
+        return Schema.winningHand(storeValue, player);
       }
       list.push(...canChow.filter(willWin).map(tiles => ({
         tiles,
@@ -203,15 +203,15 @@
 
   let handlers;
   $: {
-    const store = $store;
-    if (store) {
-      if (store.completed) {
+    const storeValue = $store;
+    if (storeValue) {
+      if (storeValue.completed) {
         handlers = [];
       } else {
-        handlers = store.tiles.map((tile, index) => {
+        handlers = storeValue.tiles.map((tile, index) => {
           if (myTurn) {
-            if (typeof store.drawn === 'number') {
-              if (store[store.turn].up.includes(index)) {
+            if (typeof storeValue.drawn === 'number') {
+              if (storeValue[storeValue.turn].up.includes(index)) {
                 return async () => {
                   try {
                     await socket.send('discard', { tile: index });
@@ -243,7 +243,7 @@
             };
           }
 
-          if (index === store.discarded && !myDiscard) {
+          if (index === storeValue.discarded && !myDiscard) {
             if ($selectionSets.length === 1) {
               return async () => {
                 await $selectionSets[0].handler();

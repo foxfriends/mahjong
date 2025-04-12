@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "Play Mahjong online with your friends",
   "main": "src/index.js",
+  "private": true,
+  "engines": {
+    "node": "17.3.0",
+    "npm": "8.3.0"
+  },
   "scripts": {
     "start": "parcel watch src/index.html",
     "build": "parcel build src/index.html"
@@ -22,13 +27,12 @@
   },
   "homepage": "https://github.com/foxfriends/mahjong#readme",
   "devDependencies": {
-    "autoprefixer": "^9.7.6",
-    "parcel-bundler": "^1.12.4",
-    "parcel-plugin-svelte": "^4.0.6",
+    "autoprefixer": "^9.8.8",
+    "parcel-bundler": "^1.12.5",
+    "parcel-plugin-svelte": "^4.0.9",
     "postcss-modules": "^1.5.0",
     "socket.io-client": "^2.3.0",
-    "svelte": "^3.49.0"
+    "svelte": "^3.59.2"
   },
-  "browserslist": "last 1 chrome version, last 1 firefox version",
-  "dependencies": {}
+  "browserslist": "last 1 chrome version, last 1 firefox version"
 }

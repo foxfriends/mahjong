@@ -4,6 +4,11 @@
   "description": "Play Mahjong online with your friends",
   "main": "index.js",
   "type": "module",
+  "private": true,
+  "engines": {
+    "node": "17.3.0",
+    "npm": "8.3.0"
+  },
   "scripts": {
     "start": "node -r dotenv/config index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
