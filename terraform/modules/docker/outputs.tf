@@ -1,3 +1,3 @@
 output "port" {
-  value = docker_container.inventory.ports[0].external
+  value = docker_container.mahjong.ports[0].external
 }

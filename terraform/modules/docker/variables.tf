@@ -2,13 +2,9 @@ variable "name" {
   type = string
 }
 
-variable "config_dir" {
-  type = string
-}
-
 variable "image_name" {
   type    = string
-  default = "ghcr.io/foxfriends/inventory"
+  default = "ghcr.io/foxfriends/mahjong"
 }
 
 variable "image_version" {
