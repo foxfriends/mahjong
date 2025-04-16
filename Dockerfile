@@ -17,6 +17,8 @@ COPY --from=build /build/dist ./dist
 COPY ./server/package.json ./server/package-lock.json ./
 ENV NODE_ENV=production
 ENV mahjong_dist=./dist 
+ENV mahjong_port=3000
+EXPOSE $mahjong_port
 RUN npm ci
 COPY ./server/lib/ ./lib/
 COPY ./server/socket/ ./socket/
