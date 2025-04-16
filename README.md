@@ -1,6 +1,6 @@
 # Mahjong
 
->   Work in progress: This game is probably functional, but has not been thoroughly tested. Play at your own risk.
+> Work in progress: This game is probably functional, but has not been thoroughly tested. Play at your own risk.
 
 Play Mahjong in your browser with your friends.
 
@@ -60,5 +60,5 @@ You'll have to restart the server manually when it changes, but the client will 
 
 ## Configuration
 
-The port (`mahjong_port`) and save data directory (`mahjong_state`) can be changed by modifying the 
+The port (`mahjong_port`) and save data directory (`mahjong_state`) can be changed by modifying the
 values in `server/.env`. Changing the `mahjong_dist` directory is not recommended.

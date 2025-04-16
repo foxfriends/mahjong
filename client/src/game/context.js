@@ -1,5 +1,5 @@
-import { setContext, getContext } from 'svelte';
-import { writable, get } from 'svelte/store';
+import { setContext, getContext } from "svelte";
+import { writable, get } from "svelte/store";
 
 const CONTEXT = Symbol();
 

@@ -6,8 +6,8 @@
   "type": "module",
   "private": true,
   "engines": {
-    "node": "17.3.0",
-    "npm": "8.3.0"
+    "node": "22.14.0",
+    "npm": "10.9.2"
   },
   "scripts": {
     "start": "node -r dotenv/config index.js",
@@ -28,6 +28,7 @@
   },
   "homepage": "https://github.com/foxfriends/mahjong#readme",
   "dependencies": {
+    "@koa/router": "^13.1.0",
     "dotenv": "^8.2.0",
     "koa": "^2.11.0",
     "koa-static": "^5.0.0",

@@ -1,0 +1,10 @@
+/.git
+/.github
+/README.md
+/client/node_modules
+/server/node_modules
+/client/src/socket/
+/client/src/lib/
+/client/src/tiles/*
+!/client/src/tiles/Regular
+.env
