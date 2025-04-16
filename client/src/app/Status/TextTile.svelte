@@ -1,5 +1,5 @@
 <script>
-  import images from '../../tiles/Regular/*.svg';
+  import images from '../images.js';
   import context from '../../game/context.js';
 
   const { store } = context();

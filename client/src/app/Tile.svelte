@@ -111,7 +111,7 @@
   import { createEventDispatcher } from 'svelte';
   import context from '../game/context.js';
   import { WINDS } from '../lib/schema.js';
-  import images from '../tiles/Regular/*.svg';
+  import images from './images.js';
 
   export let tile, index, clickable = false, selected = false;
   export let tableAngle;

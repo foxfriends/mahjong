@@ -1,5 +1,5 @@
 <script>
-  import images from '../../tiles/Regular/*.svg';
+  import images from '../images.js';
 
   export let tile;
 

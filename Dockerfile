@@ -2,7 +2,7 @@ FROM node:22.14.0 AS build
 WORKDIR /build
 COPY ./client/package.json ./client/package-lock.json ./
 RUN npm ci
-COPY ./client/.postcssrc ./
+COPY ./client/.postcssrc ./client/vite.config.js ./
 COPY ./client/src/ ./src/
 COPY ./server/lib/ ./src/lib/
 COPY ./server/socket/ ./src/socket/
