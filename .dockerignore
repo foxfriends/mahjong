@@ -8,3 +8,4 @@
 /client/src/tiles/*
 !/client/src/tiles/Regular
 .env
+/terraform
