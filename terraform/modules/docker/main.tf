@@ -35,6 +35,7 @@ resource "docker_container" "mahjong" {
 
   volumes {
     container_path = "/state"
+    volume_name    = docker_volume.state.name
     read_only      = false
   }
 
