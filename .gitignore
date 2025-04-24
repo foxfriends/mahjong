@@ -4,4 +4,4 @@
 /server/node_modules/
 /state/
 .terraform
-.terrraform.lock.hcl
+.terraform.lock.hcl
